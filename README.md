@@ -72,10 +72,10 @@ LLAMA_ARG_HOST=127.0.0.1
 Launching a synchronous server based on the latest [llama.cpp release](https://github.com/ggml-org/llama.cpp/releases) version
 ```python
 import os
+from dotenv import dotenv_values
 from llama_cpp_py import LlamaSyncServer
 
 # environment variables for llama.cpp
-from dotenv import dotenv_values
 llama_env = dotenv_values('env.llama')
 llama_env.update(os.environ)
 
@@ -199,3 +199,4 @@ See [platformdirs examle output](https://github.com/tox-dev/platformdirs?tab=rea
 ## License
 
 This project is licensed under the terms of the [MIT](./LICENSE) license.
+
