@@ -10,7 +10,6 @@ env:
   LLM_MODEL_DIR: models
   LLM_MODEL_REPO: bartowski/Qwen_Qwen3-0.6B-GGUF
   LLM_MODEL_FILE: Qwen_Qwen3-0.6B-Q4_K_M.gguf
-  LLAMA_ARG_MODEL: ${{ LLM_MODEL_DIR }}/${{ LLM_MODEL_FILE }}
   LLAMA_ARG_CTX_SIZE: 4096
   LLAMA_ARG_NO_WEBUI: 1
   LLAMA_ARG_JINJA: 1
@@ -89,5 +88,7 @@ jobs:
           python -m pip install .[test]
   
       - name: Test with pytest
+        env:
+          LLAMA_ARG_MODEL: ${{ env.LLM_MODEL_DIR }}/${{ env.LLM_MODEL_FILE }}
         run: |
           python -m pytest -vs
