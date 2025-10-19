@@ -2,7 +2,7 @@
 
 # llama-cpp-py
 
-Python wrapper for running the [llama.cpp](https://github.com/ggml-org/llama.cpp) server with automatic or manual binary management.
+Python wrapper for running the [llama.cpp](https://github.com/ggml-org/llama.cpp) server with automatic or manual binary management.  
 Runs the server in a separate subprocess supporting both synchronous and asynchronous APIs.
 
 
@@ -156,6 +156,7 @@ async def main():
         if (token := chunk.choices[0].delta.content) is not None:
             full_response += token
             print(token, end='', flush=True)
+
     # stopping the server
     await llama_server.stop()
 
@@ -173,7 +174,7 @@ If the server fails to start or behaves unexpectedly, check the following:
 ```python
 llama_server = LlamaAsyncServer(verbose=True)
 ```
-- Link to the [llama.cpp release](https://github.com/ggml-org/llama.cpp/releases) archive appropriate for your system via ```python
+- Link to the [llama.cpp release](https://github.com/ggml-org/llama.cpp/releases) archive appropriate for your system via  ```python
 LlamaReleaseManager(release_zip_url=url)
 ```
 - Or use the path to the directory with the pre-compiled llama.cpp 
@@ -181,7 +182,7 @@ LlamaReleaseManager(release_zip_url=url)
 LlamaReleaseManager(release_dir=path_to_binaries)
 ```
 
-llama.cpp binary releases are downloaded to:
+llama.cpp binary releases are downloaded to:  
 - **Windows**
 ```
 %LOCALAPPDATA%\llama-cpp-py\releases
@@ -200,5 +201,3 @@ See [platformdirs examle output](https://github.com/tox-dev/platformdirs?tab=rea
 ## License
 
 This project is licensed under the terms of the [MIT](./LICENSE) license.
-
-
