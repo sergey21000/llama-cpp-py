@@ -56,6 +56,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: 'requirements*.txt'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .[test]
+
       - name: Download models artifact
         uses: actions/download-artifact@v5
         with:
@@ -74,19 +86,7 @@ jobs:
           echo "LLM model dir:"
           dir ${{ env.LLM_MODEL_DIR }}
         shell: pwsh
-          
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: 'requirements*.txt'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install .[test]
-  
+        
       - name: Test with pytest
         env:
           LLAMA_ARG_MODEL: ${{ env.LLM_MODEL_DIR }}/${{ env.LLM_MODEL_FILE }}
