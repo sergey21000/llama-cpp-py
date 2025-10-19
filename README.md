@@ -174,7 +174,8 @@ If the server fails to start or behaves unexpectedly, check the following:
 ```python
 llama_server = LlamaAsyncServer(verbose=True)
 ```
-- Link to the [llama.cpp release](https://github.com/ggml-org/llama.cpp/releases) archive appropriate for your system via  ```python
+- Link to the [llama.cpp release](https://github.com/ggml-org/llama.cpp/releases) archive appropriate for your system via 
+```python
 LlamaReleaseManager(release_zip_url=url)
 ```
 - Or use the path to the directory with the pre-compiled llama.cpp 
