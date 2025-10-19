@@ -1,0 +1,201 @@
+
+
+# llama-cpp-py
+
+Python wrapper for running the [llama.cpp](https://github.com/ggml-org/llama.cpp) server with automatic or manual binary management.
+Runs the server in a separate subprocess supporting both synchronous and asynchronous APIs.
+
+
+## Requirements
+
+Python 3.10 or higher.
+
+
+## Installation
+
+Install from PyPI
+```sh
+pip install llama-cpp-py
+```
+
+Install from source
+```sh
+git clone https://github.com/sergey21000/llama_cpp_py
+cd llama_cpp_py
+pip install -e .
+```
+
+
+## Quick Start
+
+More examples in the Google Colab notebook <a href="https://colab.research.google.com/drive/17f6tD5TM9EP52-3NZtZ1qQ-QrrLUTBEG"><img src="https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=5c5c5c&color=0f80c1&label=%20" alt="Open in Colab"></a>
+
+
+### 1. Set up environment file for llama.cpp
+
+Creating an `env.llama` file with variables for llama.cpp server
+```sh
+# download example env file
+wget https://github.com/sergey21000/llama-cpp-py/raw/main/env.llama
+# or create manually
+nano env.llama
+```
+
+Example `env.llama` content:
+```env
+# llama.cpp server environment variables
+# See: https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md#usage
+
+# Model source
+LLAMA_ARG_HF_REPO=bartowski/Qwen_Qwen3-4B-GGUF
+LLAMA_ARG_HF_FILE=Qwen_Qwen3-4B-Q4_K_M.gguf
+
+# Alternative model options
+# LLAMA_ARG_MODEL_URL=https://huggingface.co/bartowski/Qwen_Qwen3-4B-GGUF/resolve/main/Qwen_Qwen3-4B-Q4_K_M.gguf
+# LLAMA_ARG_MODEL=gguf_models/Qwen_Qwen3-4B-Q4_K_M.gguf
+# LLAMA_ARG_MODEL=D:/models/Qwen_Qwen3-4B-Q4_K_M.gguf
+
+# Server configuration
+LLAMA_ARG_JINJA=1
+LLAMA_ARG_CTX_SIZE=4096
+LLAMA_ARG_NO_WEBUI=1
+LLAMA_ARG_N_PARALLEL=1
+LLAMA_ARG_N_GPU_LAYERS=-1
+
+# Network endpoint
+LLAMA_ARG_PORT=8080
+LLAMA_ARG_HOST=127.0.0.1
+```
+
+### 2. Launch the server and send requests
+
+Launching a synchronous server based on the latest [llama.cpp release](https://github.com/ggml-org/llama.cpp/releases) version
+```python
+import os
+from llama_cpp_py import LlamaSyncServer
+
+# environment variables for llama.cpp
+from dotenv import dotenv_values
+llama_env = dotenv_values('env.llama')
+llama_env.update(os.environ)
+
+# auto-download last release and start server
+# set verbose=True to display server logs
+server = LlamaSyncServer()
+server.start(verbose=False, env=llama_env)
+
+# sending requests with OpenAI client
+from openai import OpenAI
+
+client = OpenAI(
+	base_url=server.server_url + '/v1',
+	api_key='sk-no-key-required',
+)
+response = client.chat.completions.create(
+    model='local',
+    messages=[{'role': 'user', 'content': 'Hello!'}]
+)
+
+# stopping the server
+server.stop()
+```
+
+Launching an asynchronous server based on a specific release version
+```python
+import os
+import asyncio
+from openai import AsyncOpenAI
+from dotenv import dotenv_values
+from llama_cpp_py import LlamaAsyncServer, LlamaReleaseManager
+
+
+# environment variables for llama.cpp
+llama_env = dotenv_values('env.llama')
+llama_env.update(os.environ)
+
+# a) download a release by a specific tag with the 'cuda' priority in the title
+# set tag='latest' to use the latest llama.cpp release version
+# optionally specify priority_patterns to prefer certain builds (e.g. 'cuda' or 'cpu')
+release_manager = LlamaReleaseManager(tag='b6780', priority_patterns=['cuda'])
+
+# b) or set a specific release url in zip format
+# release_manager = LlamaReleaseManager(
+#     release_zip_url='https://github.com/ggml-org/llama.cpp/releases/download/b6780/llama-b6780-bin-win-cuda-12.4-x64.zip'
+# )
+
+# c) or selecting the compiled directory llama.cpp
+# release_manager = LlamaReleaseManager(release_dir='/content/llama.cpp/build/bin')
+	
+async def main():
+    # start llama.cpp server (set verbose=True to display server logs)
+    llama_server = LlamaAsyncServer(verbose=False, release_manager=release_manager)
+    await llama_server.start(env=llama_env)
+
+    # sending requests with OpenAI client
+    client = AsyncOpenAI(
+        base_url=f'{llama_server.server_url}/v1',
+        api_key='sk-no-key-required',
+    )
+    stream_response = await client.chat.completions.create(
+        model='local',
+        messages=[{'role': 'user', 'content': 'How are you?'}],
+        stream=True,
+        temperature=0.8,
+        max_tokens=-1,
+        extra_body=dict(
+            top_k=40,
+            reasoning_format='none',
+            chat_template_kwargs=dict(
+                enable_thinking=True,
+            ),
+        ),
+    )
+    full_response = ''
+    async for chunk in stream_response:
+        if (token := chunk.choices[0].delta.content) is not None:
+            full_response += token
+            print(token, end='', flush=True)
+    # stopping the server
+    await llama_server.stop()
+
+if __name__ == '__main__':
+    asyncio.run(main())
+```
+
+
+## Troubleshooting
+
+If the server fails to start or behaves unexpectedly, check the following:
+- Check that the model path or URL in `env.llama` is correct
+- Verify that the port is not already in use
+- Try setting `verbose=True` to see server logs
+```python
+llama_server = LlamaAsyncServer(verbose=True)
+```
+- Link to the [llama.cpp release](https://github.com/ggml-org/llama.cpp/releases) archive appropriate for your system via ```python
+LlamaReleaseManager(release_zip_url=url)
+```
+- Or use the path to the directory with the pre-compiled llama.cpp 
+```python
+LlamaReleaseManager(release_dir=path_to_binaries)
+```
+
+llama.cpp binary releases are downloaded to:
+- **Windows**
+```
+%LOCALAPPDATA%\llama-cpp-py\releases
+```
+- **Linux**
+```
+~/.local/share/llama-cpp-py/releases
+```
+- **MacOS**
+```
+~/Library/Application Support/llama-cpp-py/releases
+```
+See [platformdirs examle output](https://github.com/tox-dev/platformdirs?tab=readme-ov-file#example-output)
+
+
+## License
+
+This project is licensed under the terms of the [MIT](./LICENSE) license.
