@@ -73,7 +73,9 @@ Launching a synchronous server based on the latest [llama.cpp release](https://g
 ```python
 import os
 from dotenv import dotenv_values
+from openai import OpenAI
 from llama_cpp_py import LlamaSyncServer
+
 
 # environment variables for llama.cpp
 llama_env = dotenv_values('env.llama')
@@ -84,9 +86,8 @@ llama_env.update(os.environ)
 server = LlamaSyncServer()
 server.start(verbose=False, env=llama_env)
 
-# sending requests with OpenAI client
-from openai import OpenAI
 
+# sending requests with OpenAI client
 client = OpenAI(
 	base_url=server.server_url + '/v1',
 	api_key='sk-no-key-required',
@@ -199,4 +200,5 @@ See [platformdirs examle output](https://github.com/tox-dev/platformdirs?tab=rea
 ## License
 
 This project is licensed under the terms of the [MIT](./LICENSE) license.
+
 
