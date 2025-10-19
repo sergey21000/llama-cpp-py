@@ -20,8 +20,8 @@ pip install llama-cpp-py
 
 Install from source
 ```sh
-git clone https://github.com/sergey21000/llama_cpp_py
-cd llama_cpp_py
+git clone https://github.com/sergey21000/llama-cpp-py
+cd llama-cpp-py
 pip install -e .
 ```
 
@@ -202,3 +202,4 @@ See [platformdirs examle output](https://github.com/tox-dev/platformdirs?tab=rea
 ## License
 
 This project is licensed under the terms of the [MIT](./LICENSE) license.
+
