@@ -13,11 +13,17 @@ class LlamaReleaseManager(GithubReleaseManager):
         self,
         tag: str = 'latest',
         release_zip_url: str = '',
+        releases_dir: str | Path = '',
         exclude_patterns: list[str] | None = ['vulkan', 'cudart'],
         priority_patterns: list[str] | None = ['cpu', 'cuda'],
     ):
         releases_api_url = 'https://api.github.com/repos/ggml-org/llama.cpp/releases'
-        releases_dir = Path(user_data_dir('llama-cpp-py', appauthor=False)) / 'releases'
+        if not releases_dir:
+            releases_dir = os.getenv('RELEASES_DIR')
+            if not releases_dir:
+                releases_dir = Path(
+                    user_data_dir('llama-cpp-py', appauthor=False)
+                ) / 'releases'
         releases_dir.mkdir(parents=True, exist_ok=True)
         super().__init__(
             releases_api_url=releases_api_url,

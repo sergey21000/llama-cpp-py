@@ -33,7 +33,7 @@ class LlamaSyncServer(LlamaBaseServer):
     def start(self, **subprocess_popen_kwargs):
         logger.info('llama.cpp server starting  ...')
         self.process = subprocess.Popen(
-            self.start_server_cmd.split(),
+            [self.start_server_cmd],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             **subprocess_popen_kwargs,

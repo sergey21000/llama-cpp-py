@@ -32,7 +32,7 @@ class LlamaAsyncServer(LlamaBaseServer):
 
     async def start(self, **subprocess_exec_kwargs):
         self.process = await asyncio.create_subprocess_exec(
-            *self.start_server_cmd.split(),
+            self.start_server_cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             **subprocess_exec_kwargs,
