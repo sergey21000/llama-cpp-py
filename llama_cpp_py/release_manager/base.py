@@ -21,6 +21,7 @@ class GithubReleaseManager:
         self.validate_releases_api_url(releases_api_url)
         self.releases_api_url = releases_api_url
         self.releases_dir = Path(releases_dir)
+        self.releases_dir.mkdir(parents=True, exist_ok=True)
         if release_zip_url:
             tag = self.get_tag_name_from_url(release_zip_url)
         elif tag == 'latest':

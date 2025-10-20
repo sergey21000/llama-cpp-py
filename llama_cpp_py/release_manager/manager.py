@@ -24,7 +24,6 @@ class LlamaReleaseManager(GithubReleaseManager):
                 releases_dir = Path(
                     user_data_dir('llama-cpp-py', appauthor=False)
                 ) / 'releases'
-        releases_dir.mkdir(parents=True, exist_ok=True)
         super().__init__(
             releases_api_url=releases_api_url,
             releases_dir=releases_dir,
