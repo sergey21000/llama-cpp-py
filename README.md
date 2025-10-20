@@ -2,7 +2,8 @@
 
 # llama-cpp-py
 
-[![PyPI version](https://img.shields.io/pypi/v/llama-cpp-py.svg?color=006400)](https://pypi.org/project/llama-cpp-py/)
+[![PyPI version](https://img.shields.io/pypi/v/llama-cpp-py?color=006400)](https://pypi.org/project/llama-cpp-py/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/llama-cpp-py?color=006400)](https://pypi.org/project/llama-cpp-py/)
 
 Python wrapper for running the [llama.cpp](https://github.com/ggml-org/llama.cpp) server with automatic or manual binary management.  
 Runs the server in a separate subprocess supporting both synchronous and asynchronous APIs.
@@ -204,5 +205,6 @@ See [platformdirs examle output](https://github.com/tox-dev/platformdirs?tab=rea
 ## License
 
 This project is licensed under the terms of the [MIT](./LICENSE) license.
+
 
 
