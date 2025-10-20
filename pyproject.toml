@@ -34,5 +34,4 @@ test = [
 ]
 
 [project.urls]
-Repository = "https://github.com/sergey21000/llama_cpp_py"
-
+Repository = "https://github.com/sergey21000/llama-cpp-py"
