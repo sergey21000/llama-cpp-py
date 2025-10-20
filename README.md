@@ -2,6 +2,8 @@
 
 # llama-cpp-py
 
+[![PyPI version](https://img.shields.io/pypi/v/llama-cpp-py.svg?color=006400)](https://pypi.org/project/llama-cpp-py/)
+
 Python wrapper for running the [llama.cpp](https://github.com/ggml-org/llama.cpp) server with automatic or manual binary management.  
 Runs the server in a separate subprocess supporting both synchronous and asynchronous APIs.
 
@@ -28,7 +30,7 @@ pip install -e .
 
 ## Quick Start
 
-More examples in the Google Colab notebook <a href="https://colab.research.google.com/drive/17f6tD5TM9EP52-3NZtZ1qQ-QrrLUTBEG"><img src="https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=5c5c5c&color=0f80c1&label=%20" alt="Open in Colab"></a>
+More examples in the Google Colab notebook <a href="https://colab.research.google.com/drive/17f6tD5TM9EP52-3NZtZ1qQ-QrrLUTBEG"><img src="https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=5c5c5c&color=b3771e&label=%20" alt="Open in Colab"></a>
 
 
 ### 1. Set up environment file for llama.cpp
@@ -202,4 +204,5 @@ See [platformdirs examle output](https://github.com/tox-dev/platformdirs?tab=rea
 ## License
 
 This project is licensed under the terms of the [MIT](./LICENSE) license.
+
 
