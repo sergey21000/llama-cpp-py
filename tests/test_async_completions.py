@@ -1,3 +1,14 @@
+"""
+Integration tests for llama-cpp-py package.
+
+Tests cover:
+- Server startup/shutdown (sync and async)
+- OpenAI client integration
+- Chat completions with streaming
+- Thinking mode functionality
+- Environment configuration
+"""
+
 import os
 import pytest
 from openai import AsyncOpenAI
@@ -6,6 +17,13 @@ from colorama import Fore, Style
 
 @pytest.mark.asyncio
 async def test_async_completion(llama_async_server):
+    """Test async chat completions with and without thinking mode.
+    
+    Verifies:
+    - Basic completion works
+    - Response contains reasonable text
+    - Thinking tags are properly controlled via enable_thinking flag
+    """
     client = AsyncOpenAI(
         base_url=f'{llama_async_server.server_url}/v1',
         api_key='sk-no-key-required',

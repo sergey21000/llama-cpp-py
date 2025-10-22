@@ -1,9 +1,27 @@
+"""
+Integration tests for llama-cpp-py package.
+
+Tests cover:
+- Server startup/shutdown (sync and async)
+- OpenAI client integration
+- Chat completions with streaming
+- Thinking mode functionality
+- Environment configuration
+"""
+
 import os
 from openai import OpenAI
 from colorama import Fore, Style
 
 
 def test_sync_completion(llama_sync_server):
+    """Test synchronous chat completions with various parameters.
+    
+    Verifies:
+    - Sync client integration works
+    - Different parameters affect output as expected
+    - Response formatting is correct
+    """
     client = OpenAI(
         base_url=f'{llama_sync_server.server_url}/v1',
         api_key='sk-no-key-required',

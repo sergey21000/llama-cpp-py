@@ -9,6 +9,11 @@ from llama_cpp_py.logger import logger
 
 
 class GithubReleaseManager:
+    """Manages downloading and extracting GitHub releases for specific platforms.
+    
+    Handles automatic detection of system architecture, downloading appropriate
+    release assets, and extracting them to a local directory with caching support.
+    """
     def __init__(
         self,
         releases_api_url: str,
@@ -18,6 +23,16 @@ class GithubReleaseManager:
         exclude_patterns: list[str] | None = None,
         priority_patterns: list[str] | None = None,
     ):
+        """Initialize GitHub release manager.
+        
+        Args:
+            releases_api_url: GitHub API releases endpoint URL
+            releases_dir: Local directory to store downloaded releases
+            tag: Release tag name or 'latest' for the most recent release
+            release_zip_url: Direct URL to specific release zip file (overrides tag)
+            exclude_patterns: Patterns to exclude from asset selection
+            priority_patterns: Patterns to prioritize when multiple assets match
+        """
         self.validate_releases_api_url(releases_api_url)
         self.releases_api_url = releases_api_url
         self.releases_dir = Path(releases_dir)
@@ -40,9 +55,12 @@ class GithubReleaseManager:
             zip_url=release_zip_url,
             extract_dir=self.release_dir,
         )
+        else:
+            logger.info(f'Using cached release: {self.release_dir}')
 
     @staticmethod
     def validate_releases_api_url(releases_api_url):
+        """Validate GitHub releases API URL format."""
         # https://api.github.com/repos/ggml-org/llama.cpp/releases
         if not (
             releases_api_url.startswith('https://api.github.com/repos/')
@@ -55,6 +73,7 @@ class GithubReleaseManager:
 
     @staticmethod
     def validate_release_zip_url(release_zip_url: str) -> None:
+        """Validate GitHub release zip URL format."""
         # https://github.com/ggml-org/llama.cpp/releases/download/b6752/cudart-llama-bin-win-cuda-12.4-x64.zip
         if not (
             release_zip_url.startswith('https://github.com/')
@@ -67,6 +86,7 @@ class GithubReleaseManager:
 
     @staticmethod
     def get_tag_name_from_url(url: str) -> str:
+        """Extract release tag name from GitHub API URL or download URL."""
         if url.endswith('/releases/latest') and 'api.github.com' in url:
             response = requests.get(url)
             response.raise_for_status()
@@ -89,6 +109,7 @@ class GithubReleaseManager:
         exclude_patterns: list[str] | None = None,
         priority_patterns: list[str] | None = None,
     ) -> str:
+        """Get download URL for the most suitable release zip asset."""
         zip_assets = self.get_release_zip_assets(tag=tag)
         zip_asset = self.get_matched_asset(
             assets=zip_assets,
@@ -98,7 +119,7 @@ class GithubReleaseManager:
         return zip_asset['url']
 
     def get_release_zip_assets(self, tag: str) -> list[dict[str, str]]:
-        '''Get all links to zip archives from the specified or latest release'''
+        """Get all zip assets available for a specific release tag."""
         api_url = f'{self.releases_api_url}/tags/{tag}'
         response = requests.get(api_url)
         response.raise_for_status()
@@ -120,7 +141,7 @@ class GithubReleaseManager:
         exclude_patterns: list[str] | None = None,
         priority_patterns: list[str] | None = None,
     ) -> dict[str, str]:
-        '''Selects the appropriate archive based on the current OS and architecture'''
+        """Select the most appropriate asset based on system and patterns."""
         os_name, arch = self.detect_system()
         matched_assets = []
         for asset in assets:
@@ -150,7 +171,7 @@ class GithubReleaseManager:
 
     @staticmethod
     def detect_system() -> tuple[str, str]:
-        '''Determines the current platform (OS + architecture)'''
+        """Detect current operating system and architecture."""
         os_name = platform.system().lower()
         arch = platform.machine().lower()
         if os_name == 'windows':
@@ -167,6 +188,7 @@ class GithubReleaseManager:
 
     @staticmethod
     def download_file(file_url: str, file_path: str | Path) -> None:
+        """Download file from URL with progress bar."""
         response = requests.get(file_url, stream=True)
         if response.status_code != 200:
             raise Exception(
@@ -187,6 +209,7 @@ class GithubReleaseManager:
 
     @staticmethod
     def extract_zip(zip_path: Path, extract_dir: Path) -> None:
+        """Extract zip archive to directory."""
         with zipfile.ZipFile(zip_path, 'r') as archive:
             archive.extractall(path=extract_dir)
 
@@ -198,6 +221,7 @@ class GithubReleaseManager:
         override: bool = False,
         set_execute_permissions: bool = True,
     ) -> None:
+        """Download and extract zip file, optionally setting execute permissions."""
         extract_dir.mkdir(exist_ok=True, parents=True)
         zip_path = extract_dir / Path(zip_url).name
         logger.info(f'Loading file {zip_url} to path {zip_path}')
