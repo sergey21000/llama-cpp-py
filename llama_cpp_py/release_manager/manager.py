@@ -48,9 +48,9 @@ class LlamaReleaseManager(GithubReleaseManager):
         )
         self.ensure_release_dir(self.release_dir)
         if platform.system() != 'Windows':
-            os.environ['LD_LIBRARY_PATH'] = (
-                f"{os.getenv('LD_LIBRARY_PATH') + ':' if os.getenv('LD_LIBRARY_PATH') else ''}"
-                f"{self.release_dir.absolute()}"
+            os.environ['LD_LIBRARY_PATH'] = f"{self.release_dir.absolute()}:" + ':'.join(
+                p for p in os.getenv('LD_LIBRARY_PATH', '').split(':') 
+                if 'llama-cpp-py/releases' not in p
             )
 
     def ensure_release_dir(self, release_dir: Path) -> None:
@@ -76,3 +76,4 @@ class LlamaReleaseManager(GithubReleaseManager):
         GithubReleaseManager.validate_release_zip_url(release_zip_url)
         if 'https://github.com/ggml-org/llama.cpp/releases/download' not in release_zip_url:
             raise ValueError('The zip download link must include https://github.com/ggml-org/llama.cpp')
+
