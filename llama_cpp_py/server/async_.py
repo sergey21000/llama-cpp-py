@@ -9,7 +9,7 @@ from pathlib import Path
 
 import aiohttp
 
-from llama_cpp_py.logger import logger, process_logger, status_logger
+from llama_cpp_py.logger import logger, status_logger
 from llama_cpp_py.release_manager.manager import LlamaReleaseManager
 from llama_cpp_py.server.base import LlamaBaseServer
 
@@ -36,8 +36,12 @@ class LlamaAsyncServer(LlamaBaseServer):
             port: Server port (default: 8080)
             release_manager: Optional pre-configured release manager
             verbose: Enable verbose logging of server output
+            wait_for_ready: If True, waits for server health check before start() completes;
+                           if False, returns immediately after process launch
             **subprocess_kwargs: Additional arguments for 
-                asyncio.create_subprocess_exec (except "env")
+                asyncio.create_subprocess_exec
+                https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.subprocess_exec
+                
         """
         super().__init__(
             llama_dir=llama_dir,
@@ -114,18 +118,21 @@ class LlamaAsyncServer(LlamaBaseServer):
             chunk = await stream.read(1)
             if not chunk:
                 break
-            self.process_output_chunk(chunk, state, log_prefix)
+            self.process_log_output_chunk(chunk, state, log_prefix)
         if state['last_was_cr']:
             print()
         
-        
-    @staticmethod
-    async def wait_for_server_ready(url: str, timeout: int | float = 60) -> bool:
+
+    async def wait_for_server_ready(self, url: str, timeout: int | float = 60) -> bool:
         """Wait asynchronously for server to become ready and respond to health checks."""
         async with aiohttp.ClientSession() as session:
             start_time = time.monotonic()
             model_loading = False
             while time.monotonic() - start_time < timeout:
+                ret = self.process.returncode
+                if ret is not None:
+                    status_logger.error(f'llama.cpp process exited unexpectedly with code {ret}')
+                    return False
                 try:
                     async with session.get(url, timeout=aiohttp.ClientTimeout(total=2)) as response:
                         if response.status == 200:

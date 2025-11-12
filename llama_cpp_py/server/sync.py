@@ -8,7 +8,7 @@ import logging
 import requests
 from pathlib import Path
 
-from llama_cpp_py.logger import logger, process_logger, status_logger
+from llama_cpp_py.logger import logger, status_logger
 from llama_cpp_py.release_manager.manager import LlamaReleaseManager
 from llama_cpp_py.server.base import LlamaBaseServer
 
@@ -35,8 +35,10 @@ class LlamaSyncServer(LlamaBaseServer):
             port: Server port (default: 8080)
             release_manager: Optional pre-configured release manager
             verbose: Enable verbose logging of server output
+            wait_for_ready: If True, waits for server health check before start() completes;
+                           if False, returns immediately after process launch
             **subprocess_kwargs: Additional arguments for subprocess.Popen 
-                (except "env")
+                https://docs.python.org/3/library/subprocess.html#popen-constructor
         """
         super().__init__(
             llama_dir=llama_dir,
@@ -118,18 +120,21 @@ class LlamaSyncServer(LlamaBaseServer):
             chunk = stream.read(1)
             if not chunk:
                 break
-            self.process_output_chunk(chunk, state, log_prefix)
+            self.process_log_output_chunk(chunk, state, log_prefix)
         if state['last_was_cr']:
             print()
         stream.close()
 
 
-    @staticmethod
-    def wait_for_server_ready(url: str, timeout: int | float = 60) -> bool:
+    def wait_for_server_ready(self, url: str, timeout: int | float = 60) -> bool:
         """Wait synchronously for server to become ready and respond to health checks."""
         start_time = time.monotonic()
         model_loading = False
         while time.monotonic() - start_time < timeout:
+            ret = self.process.poll() 
+            if ret is not None:
+                status_logger.error(f'llama.cpp process exited unexpectedly with code {ret}')
+                return False
             try:
                 response = requests.get(url, timeout=2)
                 if response.status_code == 200:
