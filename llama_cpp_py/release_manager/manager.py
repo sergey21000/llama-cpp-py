@@ -46,7 +46,7 @@ class LlamaReleaseManager(GithubReleaseManager):
             exclude_patterns=exclude_patterns,
             priority_patterns=priority_patterns,
         )
-        self.ensure_release_dir(release_dir=self.release_dir, tag=tag)
+        self.ensure_release_dir(release_dir=self.release_dir, tag=self.tag)
         if platform.system() != 'Windows':
             os.environ['LD_LIBRARY_PATH'] = f"{self.release_dir.absolute()}:" + ':'.join(
                 p for p in os.getenv('LD_LIBRARY_PATH', '').split(':') 
