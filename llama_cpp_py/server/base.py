@@ -77,7 +77,7 @@ class LlamaBaseServer:
         logger.debug(f'LlamaBaseServer init, server_url: {self.server_url}')
 
     @staticmethod
-    def process_output_chunk(chunk: bytes, state: dict, log_prefix: str) -> None:
+    def process_log_output_chunk(chunk: bytes, state: dict, log_prefix: str) -> None:
         """Process a single byte chunk from server output stream.
         
         Handles carriage returns for dynamic progress updates and newlines for regular output.
