@@ -22,13 +22,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: '3.12'
+          enable-cache: true
+
+      - name: Set up Python
+        run: |
+          uv python install 3.12
+          uv venv
           
       - name: Install huggingface-hub
-        run: pip install huggingface_hub[cli]
+        run: uv pip install huggingface_hub[cli]
 
       - name: Download models
         run: |
@@ -55,18 +60,20 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: 'requirements*.txt'
+          enable-cache: true
+
+      - name: Set up Python
+        run: |
+          uv python install ${{ matrix.python-version }}
+          uv venv
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install .[test]
+          uv pip install --upgrade pip
+          uv pip install .[test]
 
       - name: Download models artifact
         uses: actions/download-artifact@v5
@@ -91,4 +98,4 @@ jobs:
         env:
           LLAMA_ARG_MODEL: ${{ env.LLM_MODEL_DIR }}/${{ env.LLM_MODEL_FILE }}
         run: |
-          python -m pytest -vs
+          uv run python -m pytest -vs
