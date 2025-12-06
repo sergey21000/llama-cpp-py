@@ -16,16 +16,21 @@ Python 3.10 or higher.
 
 ## Installation
 
-Install from PyPI
+From PyPI
 ```sh
 pip install llama-cpp-py
 ```
 
-Install from source
+From source
 ```sh
 git clone https://github.com/sergey21000/llama-cpp-py
 cd llama-cpp-py
 pip install -e .
+```
+
+Using [UV](https://docs.astral.sh/uv/getting-started/installation/#installation-methods)
+```sh
+uv pip install llama-cpp-py
 ```
 
 
