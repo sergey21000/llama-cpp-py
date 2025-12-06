@@ -253,7 +253,7 @@ class GithubReleaseManager:
         zip_path = extract_dir / Path(zip_url).name
         logger.info(f'Loading file {zip_url} to path {zip_path}')
         cls.download_file(file_url=zip_url, file_path=zip_path)
-        cls.extract_zip(zip_or_tar_path=zip_path, extract_dir=extract_dir)
+        cls.extract_archive(zip_or_tar_path=zip_path, extract_dir=extract_dir)
         zip_path.unlink(missing_ok=True)
         if set_execute_permissions and platform.system() != 'Windows':
             for file in extract_dir.rglob('*'):
