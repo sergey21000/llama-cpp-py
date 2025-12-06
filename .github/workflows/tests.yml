@@ -37,7 +37,7 @@ jobs:
 
       - name: Download models
         run: |
-          hf download ${{ env.LLM_MODEL_REPO }} ${{ env.LLM_MODEL_FILE }} \
+          uv run hf download ${{ env.LLM_MODEL_REPO }} ${{ env.LLM_MODEL_FILE }} \
           --local-dir ${{ env.LLM_MODEL_DIR }}
           
       - name: Upload model artifact
