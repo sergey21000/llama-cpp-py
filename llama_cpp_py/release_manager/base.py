@@ -1,5 +1,7 @@
 import platform
 import zipfile
+import tarfile
+import stat
 from pathlib import Path
 
 import requests
@@ -49,7 +51,7 @@ class GithubReleaseManager:
                 priority_patterns=priority_patterns,
             )
         self.validate_release_zip_url(release_zip_url)
-        self.release_dir = self.releases_dir / Path(release_zip_url).stem
+        self.release_dir = self.releases_dir / Path(Path(release_zip_url).stem).stem
         if not self.release_dir.exists():
             self.download_and_extract_zip(
             zip_url=release_zip_url,
@@ -77,7 +79,7 @@ class GithubReleaseManager:
         # https://github.com/ggml-org/llama.cpp/releases/download/b6752/cudart-llama-bin-win-cuda-12.4-x64.zip
         if not (
             release_zip_url.startswith('https://github.com/')
-            and release_zip_url.endswith('.zip')
+            and (release_zip_url.endswith('.zip') or release_zip_url.endswith('.gz'))
         ):
             raise ValueError(
                 'The URL with release must start with '
@@ -126,7 +128,7 @@ class GithubReleaseManager:
         release_data = response.json()
         zip_assets = []
         for asset in release_data['assets']:
-            if asset['name'].endswith('.zip'):
+            if asset['name'].endswith('.zip') or asset['name'].endswith('.gz'):
                 zip_assets.append({
                     'name': asset['name'],
                     'tag_name': release_data['tag_name'],
@@ -164,7 +166,7 @@ class GithubReleaseManager:
                     break
         if len(matched_assets) > 1:
             logger.warning(
-                f'More than one archive match found, the first one will be selected:'
+                f'More than one archive match found, the first one will be selected: '
                 f'{[d.get("name") for d in matched_assets]}'
             )
         return matched_assets[0]
@@ -207,11 +209,36 @@ class GithubReleaseManager:
                 progress_tqdm.update(size)
         progress_tqdm.close()
 
+    @classmethod
+    def extract_archive(cls, zip_or_tar_path: Path, extract_dir: Path) -> None:
+        """Extract .zip or .tar(.gz) archive into extract_dir."""
+        #  TAR | .GZ
+        if zip_or_tar_path.suffix in ['.tar', '.gz', '.tar.gz', '.tgz']:
+            with tarfile.open(zip_or_tar_path, "r:gz") as tar:
+                tar.extractall(path=extract_dir)
+            return
+        # ZIP
+        if zip_or_tar_path.suffix == '.zip':
+            return cls._extract_zip_with_symlinks(
+                zip_path=zip_or_tar_path, extract_dir=extract_dir,
+            )
+        raise ValueError(f'Unsupported archive type: {zip_or_tar_path}')
+
     @staticmethod
-    def extract_zip(zip_path: Path, extract_dir: Path) -> None:
-        """Extract zip archive to directory."""
+    def _extract_zip_with_symlinks(zip_path: Path, extract_dir: Path) -> None:
+        """Extract ZIP while manually restoring symbolic links (ZIP doesn't preserve them)."""
         with zipfile.ZipFile(zip_path, 'r') as archive:
-            archive.extractall(path=extract_dir)
+            for info in archive.infolist():
+                target_path = extract_dir / info.filename
+                perms = info.external_attr >> 16
+                if stat.S_ISLNK(perms):
+                    link_target = archive.read(info).decode()
+                    target_path.parent.mkdir(parents=True, exist_ok=True)
+                    if target_path.exists() or target_path.is_symlink():
+                        target_path.unlink()
+                    os.symlink(link_target, target_path)
+                else:
+                    archive.extract(info, extract_dir)
 
     @classmethod
     def download_and_extract_zip(
@@ -226,7 +253,7 @@ class GithubReleaseManager:
         zip_path = extract_dir / Path(zip_url).name
         logger.info(f'Loading file {zip_url} to path {zip_path}')
         cls.download_file(file_url=zip_url, file_path=zip_path)
-        cls.extract_zip(zip_path=zip_path, extract_dir=extract_dir)
+        cls.extract_zip(zip_or_tar_path=zip_path, extract_dir=extract_dir)
         zip_path.unlink(missing_ok=True)
         if set_execute_permissions and platform.system() != 'Windows':
             for file in extract_dir.rglob('*'):

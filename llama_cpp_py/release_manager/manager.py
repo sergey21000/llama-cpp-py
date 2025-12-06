@@ -46,7 +46,7 @@ class LlamaReleaseManager(GithubReleaseManager):
             exclude_patterns=exclude_patterns,
             priority_patterns=priority_patterns,
         )
-        self.ensure_release_dir(self.release_dir)
+        self.ensure_release_dir(release_dir=self.release_dir, tag=tag)
         if platform.system() != 'Windows':
             os.environ['LD_LIBRARY_PATH'] = f"{self.release_dir.absolute()}:" + ':'.join(
                 p for p in os.getenv('LD_LIBRARY_PATH', '').split(':') 
@@ -61,11 +61,19 @@ class LlamaReleaseManager(GithubReleaseManager):
             bin_dir = release_dir / 'build' / 'bin'
             if self.validate_release_dir(bin_dir):
                 self.release_dir = bin_dir
+                return
+            bin_dir = release_dir / f'llama-{tag}'
+            if self.validate_release_dir(bin_dir):
+                self.release_dir = bin_dir
+                return
             else:
                 raise ValueError(f'llama-server not found in {release_dir} or {bin_dir}')
 
     def validate_release_dir(self, release_dir: Path) -> None:
         """Validate that release directory contains llama-server executable."""
+        if not release_dir.exists():
+            logger.debug(f'Path {release_dir} not exists')
+            return False
         if not any(p.stem == 'llama-server' for p in release_dir.iterdir()):
             return False
         return True
