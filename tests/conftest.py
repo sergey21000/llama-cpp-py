@@ -25,7 +25,7 @@ def release_manager():
     Returns:
         Configured LlamaReleaseManager for testing
     """
-    return LlamaReleaseManager(tag='b6780')
+    return LlamaReleaseManager(tag='latest')
 
 
 @pytest.fixture
