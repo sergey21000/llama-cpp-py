@@ -2,7 +2,6 @@
 /data/
 other/
 *.zip
-llama_cpp_py.egg-info/
 *.ipynb
 
 # Byte-compiled / optimized / DLL files

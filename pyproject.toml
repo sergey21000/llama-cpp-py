@@ -33,7 +33,8 @@ test = [
     "colorama>=0.4.6",
 ]
 
+[tool.setuptools.packages.find]
+include = ["llama_cpp_py*"]
+
 [project.urls]
 Repository = "https://github.com/sergey21000/llama-cpp-py"
-
-
