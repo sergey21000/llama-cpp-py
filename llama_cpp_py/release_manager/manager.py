@@ -62,12 +62,11 @@ class LlamaReleaseManager(GithubReleaseManager):
             if self.validate_release_dir(bin_dir):
                 self.release_dir = bin_dir
                 return
-            bin_dir = release_dir / f'llama-{tag}'
-            if self.validate_release_dir(bin_dir):
-                self.release_dir = bin_dir
-                return
-            else:
-                raise ValueError(f'llama-server not found in {release_dir} or {bin_dir}')
+        bin_dir = release_dir / f'llama-{tag}'
+        if self.validate_release_dir(bin_dir):
+            self.release_dir = bin_dir
+            return
+        raise ValueError(f'llama-server not found in {release_dir} or {bin_dir}')
 
     def validate_release_dir(self, release_dir: Path) -> None:
         """Validate that release directory contains llama-server executable."""
