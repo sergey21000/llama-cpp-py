@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 
 
-class LlamaClientBase:
+class LlamaBaseClient:
     """
     Base client for interacting with LLM models, providing common preprocessing
     and postprocessing utilities for text generation.
