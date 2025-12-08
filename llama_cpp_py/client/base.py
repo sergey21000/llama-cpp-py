@@ -6,99 +6,15 @@ class LlamaBaseClient:
     """
     Base client for interacting with LLM models, providing common preprocessing
     and postprocessing utilities for text generation.
-    
-    Handles thinking tags removal, transliteration, and text cleaning for TTS.
     """
-    opening_thinking_tags: list[str] = ['<think>', '&lt;think&gt;']
-    closing_thinking_tags: list[str] = ['</think>', '&lt;/think&gt;']
-    all_thinking_tags = [*opening_thinking_tags, *closing_thinking_tags]
-
-    @classmethod
-    def clean_thinking_tags(cls, text: str) -> str:
-        """
-        Remove thinking tags (like <think>...</think>) from the text.
-        
-        Args:
-            text: Input text potentially containing thinking tags.
-            
-        Returns:
-            Text with thinking tags and their content removed.
-        """
-        for open_tag, close_tag in zip(cls.opening_thinking_tags, cls.closing_thinking_tags):
-            pattern = rf'{open_tag}.*?{close_tag}'
-            text = re.sub(pattern, '', text, flags=re.DOTALL)
-        return text
-
-    @staticmethod
-    def transliterate_english_to_russian(text: str) -> str:
-        """
-        Convert English characters and symbols to Russian phonetic equivalents.
-        
-        Useful for TTS systems that handle Russian text better.
-        
-        Args:
-            text: Text containing English characters, numbers, and symbols.
-            
-        Returns:
-            Text with transliterated characters.
-        """
-        translit_map = {
-            'a': 'а', 'b': 'б', 'c': 'к', 'd': 'д', 'e': 'е',
-            'f': 'ф', 'g': 'г', 'h': 'х', 'i': 'и', 'j': 'ж',
-            'k': 'к', 'l': 'л', 'm': 'м', 'n': 'н', 'o': 'о',
-            'p': 'п', 'q': 'к', 'r': 'р', 's': 'с', 't': 'т',
-            'u': 'у', 'v': 'в', 'w': 'в', 'x': 'кс', 'y': 'й',
-            'z': 'з',
-            'A': 'А', 'B': 'Б', 'C': 'К', 'D': 'Д', 'E': 'Е',
-            'F': 'Ф', 'G': 'Г', 'H': 'Х', 'I': 'И', 'J': 'Ж',
-            'K': 'К', 'L': 'Л', 'M': 'М', 'N': 'Н', 'O': 'О',
-            'P': 'П', 'Q': 'К', 'R': 'Р', 'S': 'С', 'T': 'Т',
-            'U': 'У', 'V': 'В', 'W': 'В', 'X': 'КС', 'Y': 'Й',
-            'Z': 'З',
-            '0': 'ноль', '1': 'один', '2': 'два', '3': 'три', '4': 'четыре',
-            '5': 'пять', '6': 'шесть', '7': 'семь', '8': 'восемь', '9': 'девять',
-            '+': ' плюс ', '-': ' минус ', '=': ' равно ',
-            '*': ' умножить ', '/': ' разделить ', '%': ' процент ',
-        }
-
-        def transliterate_char(char):
-            return translit_map.get(char, char)
-
-        return ''.join(transliterate_char(c) for c in text)
-
-
-    @classmethod
-    def clean_text_before_speech(cls, text: str) -> str:
-        """
-        Prepare text for TTS by removing unwanted characters and normalizing.
-        
-        Performs:
-        1. Thinking tags removal
-        2. English-to-Russian transliteration
-        3. Special character filtering
-        4. Whitespace normalization
-        
-        Args:
-            text: Raw text from LLM output.
-            
-        Returns:
-            Cleaned text suitable for speech synthesis.
-        """
-        text = cls.clean_thinking_tags(text)
-        text = cls.transliterate_english_to_russian(text)
-        text = re.sub(r"[^a-zA-Zа-яА-Я0-9\s.,!?;:()\"'-]", '', text)
-        text = re.sub(r'[\"\'«»]', '', text)
-        text = re.sub(r'\s+', ' ', text).strip()
-        return text
-
 
     @classmethod
     def _prepare_messages(
         cls,
         user_message_or_messages: str,
         system_prompt: str,
-        image_path_or_base64: str | Path = '',
-        resize_size: int = 512,
+        image_path_or_base64: str | Path,
+        resize_size: int | None,
         support_system_role: bool = True,
     ) -> list[dict[str, str]]:
         """
@@ -140,7 +56,7 @@ class LlamaBaseClient:
         return messages
 
     @staticmethod
-    def _prepare_image(image: str | Path, resize_size: int) -> str:
+    def _prepare_image(image: str | Path, resize_size: int | None) -> str:
         """
         Prepare image for LLM input by resizing and converting to base64.
         
@@ -163,14 +79,15 @@ class LlamaBaseClient:
             image_path = Path(image)
             if image_path.suffix.lower() in ['.png', '.jpg', '.jpeg']:
                 image_pil = Image.open(image_path).convert('RGB')
-                image_pil.thumbnail((resize_size, resize_size))
+                if resize_size:
+                    image_pil.thumbnail((resize_size, resize_size))
                 buffer = io.BytesIO()
                 image_pil.save(buffer, format='PNG')
                 image = base64.b64encode(buffer.getvalue()).decode()
         return image
 
     @classmethod
-    def process_output_token(
+    def _process_output_token(
         cls,
         token: str,
         state: dict,

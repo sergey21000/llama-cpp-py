@@ -14,21 +14,21 @@ class LlamaAsyncClient(LlamaBaseClient):
     Provides streaming chat completions with thinking mode control.
     """
     
-    def __init__(self, server_url: str):
+    def __init__(self, openai_base_url: str, api_key: str = '-'):
         """
         Initialize async client for llama.cpp server.
         
         Args:
-            server_url: Base URL of the llama.cpp server (e.g., 'http://localhost:8080')
+            api_url: Base URL of the llama.cpp server (e.g., 'http://localhost:8080')
         """
-        self.server_url = server_url
+        self.openai_base_url = openai_base_url
         self.client = AsyncOpenAI(
-            base_url=f'{server_url}/v1',
-            api_key='sk-no-key-required',
+            base_url=openai_base_url,
+            api_key=api_key,
         )
 
 
-    async def astream_chat_completion_tokens(
+    async def _astream_chat_completion_tokens(
         self,
         user_message_or_messages: str,
         system_prompt: str,
@@ -62,7 +62,7 @@ class LlamaAsyncClient(LlamaBaseClient):
             image_path_or_base64=image_path_or_base64,
             resize_size=resize_size,
         )
-        logger.debug(f'messages before openai chat.completions.create {messages}')
+        logger.debug(f'Messages before openai chat.completions.create {messages}')
         stream_response = await self.client.chat.completions.create(
             model='local',
             messages=messages,
@@ -111,7 +111,7 @@ class LlamaAsyncClient(LlamaBaseClient):
             Default image size (512px) balances visual detail with token efficiency.
             Thinking mode placeholder appears once when entering thinking tags.
         """
-        generator = self.astream_chat_completion_tokens(
+        generator = self._astream_chat_completion_tokens(
             user_message_or_messages=user_message_or_messages,
             system_prompt=system_prompt,
             completions_kwargs=completions_kwargs,
@@ -120,7 +120,7 @@ class LlamaAsyncClient(LlamaBaseClient):
         )
         state = dict(response_text='', is_in_thinking=False)
         async for token in generator:
-            token = self.process_output_token(
+            token = self._process_output_token(
                 token=token,
                 state=state,
                 show_thinking=show_thinking,

@@ -60,6 +60,7 @@ class LlamaBaseServer:
                 '3. .env file with load_dotenv()'
             )
         self.server_url = f'http://{self.host}:{self.port}'
+        self.openai_base_url = f'{self.server_url}/v1'
         self.health_url  = f'{self.server_url}/health'
         self.timeout_wait_for_server_ready = os.getenv('TIMEOUT_WAIT_FOR_SERVER') or 300
         self.timeout_to_stop_process = 3

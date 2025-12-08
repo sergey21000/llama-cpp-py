@@ -26,7 +26,7 @@ def get_base_logger(name: str, debug: bool) -> logging.Logger:
     return get_stream_logger(
         name=name,
         format=format,
-        level=logging.INFO,
+        level=logging.DEBUG,
     )
 
 
@@ -52,17 +52,17 @@ def get_stream_logger(name: str, format: str, level: int) -> logging.Logger:
     return logger
 
 
-# Main package logger for general debugging and internal operations
+# main package logger for general debugging and internal operations
 logger = get_base_logger(name='llama-cpp-py', debug=False)
 
-# Logger for llama-server process output and system messages
+# logger for llama-server process output and system messages
 process_logger = get_stream_logger(
     name='llama-server',
     format='%(name)s: %(message)s',
     level=logging.INFO,
 )
 
-# Logger for server status messages (startup, shutdown, health checks)
+# logger for server status messages (startup, shutdown, health checks)
 status_logger = get_stream_logger(
     name='llama-cpp-py.status',
     format='%(levelname)s: %(message)s',

@@ -60,6 +60,7 @@ class GithubReleaseManager:
         else:
             logger.info(f'Using cached release: {self.release_dir}')
 
+
     @staticmethod
     def validate_releases_api_url(releases_api_url):
         """Validate GitHub releases API URL format."""
@@ -73,6 +74,7 @@ class GithubReleaseManager:
                 'https://api.github.com/repos/ and end with /releases)'
             )
 
+
     @staticmethod
     def validate_release_zip_url(release_zip_url: str) -> None:
         """Validate GitHub release zip URL format."""
@@ -85,6 +87,7 @@ class GithubReleaseManager:
                 'The URL with release must start with '
                 'https://github.com/ and end with .zip)'
             )
+
 
     @staticmethod
     def get_tag_name_from_url(url: str) -> str:
@@ -105,6 +108,7 @@ class GithubReleaseManager:
             raise ValueError(f'Tag not found at {url}')
         return tag_name
 
+
     def get_release_zip_url(
         self,
         tag: str,
@@ -119,6 +123,7 @@ class GithubReleaseManager:
             priority_patterns=priority_patterns,
         )
         return zip_asset['url']
+
 
     def get_release_zip_assets(self, tag: str) -> list[dict[str, str]]:
         """Get all zip assets available for a specific release tag."""
@@ -136,6 +141,7 @@ class GithubReleaseManager:
                     'size': f'{asset["size"] // 1024**2} MB',
                 })
         return zip_assets
+
 
     def get_matched_asset(
         self,
@@ -171,6 +177,7 @@ class GithubReleaseManager:
             )
         return matched_assets[0]
 
+
     @staticmethod
     def detect_system() -> tuple[str, str]:
         """Detect current operating system and architecture."""
@@ -187,6 +194,7 @@ class GithubReleaseManager:
         elif arch in ('arm64', 'aarch64'):
             arch = 'arm64'
         return os_name, arch
+
 
     @staticmethod
     def download_file(file_url: str, file_path: str | Path) -> None:
@@ -209,6 +217,7 @@ class GithubReleaseManager:
                 progress_tqdm.update(size)
         progress_tqdm.close()
 
+
     @classmethod
     def extract_archive(cls, zip_or_tar_path: Path, extract_dir: Path) -> None:
         """Extract .zip or .tar(.gz) archive into extract_dir."""
@@ -223,6 +232,7 @@ class GithubReleaseManager:
                 zip_path=zip_or_tar_path, extract_dir=extract_dir,
             )
         raise ValueError(f'Unsupported archive type: {zip_or_tar_path}')
+
 
     @staticmethod
     def _extract_zip_with_symlinks(zip_path: Path, extract_dir: Path) -> None:
@@ -239,6 +249,7 @@ class GithubReleaseManager:
                     os.symlink(link_target, target_path)
                 else:
                     archive.extract(info, extract_dir)
+
 
     @classmethod
     def download_and_extract_zip(
