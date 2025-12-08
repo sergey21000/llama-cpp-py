@@ -9,17 +9,20 @@ from llama_cpp_py.client.base import LlamaBaseClient
 
 class LlamaAsyncClient(LlamaBaseClient):
     """
-    Asynchronous client for llama.cpp server using OpenAI-compatible API.
+    Asynchronous client for a llama.cpp server exposing an OpenAI-compatible API.
     
-    Provides streaming chat completions with thinking mode control.
+    Supports streaming chat completions and optional thinking-mode control.
     """
     
     def __init__(self, openai_base_url: str, api_key: str = '-'):
         """
-        Initialize async client for llama.cpp server.
+        Initialize an asynchronous client for a llama.cpp server.
         
         Args:
-            api_url: Base URL of the llama.cpp server (e.g., 'http://localhost:8080')
+            openai_base_url: Base URL of the OpenAI-compatible API endpoint.
+                Must include the version prefix (e.g., 'http://localhost:8080/v1').
+            api_key: API key for authentication. For llama.cpp servers that do not
+                require authentication, a placeholder such as '-' can be used.
         """
         self.openai_base_url = openai_base_url
         self.client = AsyncOpenAI(

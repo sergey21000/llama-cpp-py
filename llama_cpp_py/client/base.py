@@ -6,8 +6,13 @@ class LlamaBaseClient:
     """
     Base client for interacting with LLM models, providing common preprocessing
     and postprocessing utilities for text generation.
+    
+    Handles thinking tags removal
     """
-
+    opening_thinking_tags = ['<think>', '&lt;think&gt;']
+    closing_thinking_tags = ['</think>', '&lt;/think&gt;']
+    all_thinking_tags = [*opening_thinking_tags, *closing_thinking_tags]
+    
     @classmethod
     def _prepare_messages(
         cls,
