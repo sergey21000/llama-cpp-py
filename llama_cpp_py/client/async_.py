@@ -31,6 +31,49 @@ class LlamaAsyncClient(LlamaBaseClient):
         )
 
 
+    async def check_health(self, path: str = '/health') -> dict[str, str | int]:
+        """
+        Check llama.cpp server health.
+
+        Returns:
+            {
+                "ok": True/False,
+                "status": "ready" | "loading" | "unavailable" | "down",
+                "message": Optional[str]
+            }
+        """
+        url = f'{self.openai_base_url}{path}'
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as resp:
+                    if resp.status == 200:
+                        return {'ok': True, 'code': resp.status, 'status': 'ready'}
+                    if resp.status == 503:
+                        data = await resp.json()
+                        msg = data.get('error', {}).get('message', 'Loading')
+                        return {
+                            'ok': False,
+                            'code': resp.status,
+                            'status': 'loading',
+                            'message': msg,
+                        }
+                    text = await resp.text()
+                    return {
+                        'ok': False,
+                        'code': resp.status,
+                        'status': 'unavailable',
+                        'message': f'HTTP {resp.status}: {text}',
+                    }
+        except Exception as e:
+            return {
+                'ok': False,
+                'code': -1,
+                'status': 'down',
+                'message': str(e),
+            }
+
+
+
     async def _astream_chat_completion_tokens(
         self,
         user_message_or_messages: str,
