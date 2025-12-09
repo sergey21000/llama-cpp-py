@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import AsyncIterator, Any
 
+import aiohttp
 from openai import AsyncOpenAI
 
 from llama_cpp_py.logger import logger, status_logger
