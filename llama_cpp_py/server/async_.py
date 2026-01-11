@@ -123,7 +123,7 @@ class LlamaAsyncServer(LlamaBaseServer):
             print()
         
 
-    async def wait_for_server_ready(self, url: str, timeout: int | float = 60) -> bool:
+    async def wait_for_server_ready(self, url: str, timeout: int | float) -> bool:
         """Wait asynchronously for server to become ready and respond to health checks."""
         async with aiohttp.ClientSession() as session:
             start_time = time.monotonic()

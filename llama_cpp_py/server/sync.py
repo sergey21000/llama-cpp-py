@@ -126,7 +126,7 @@ class LlamaSyncServer(LlamaBaseServer):
         stream.close()
 
 
-    def wait_for_server_ready(self, url: str, timeout: int | float = 60) -> bool:
+    def wait_for_server_ready(self, url: str, timeout: int | float) -> bool:
         """Wait synchronously for server to become ready and respond to health checks."""
         start_time = time.monotonic()
         model_loading = False
