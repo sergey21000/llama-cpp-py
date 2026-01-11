@@ -1,5 +1,9 @@
 import re
+import io
+import base64
 from pathlib import Path
+
+from PIL import Image
 
 
 class LlamaBaseClient:
