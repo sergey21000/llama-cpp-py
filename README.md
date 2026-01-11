@@ -246,6 +246,12 @@ llama.cpp binary releases are downloaded to:
 See [platformdirs examle output](https://github.com/tox-dev/platformdirs?tab=readme-ov-file#example-output)
 
 
-## License
+## Dependencies
 
-This project is licensed under the terms of the [MIT](./LICENSE) license.
+- [aiohttp](https://github.com/aio-libs/aiohttp) - Asynchronous HTTP client, used to check llama.cpp server readiness and interact with the server in async mode.
+- [requests](https://github.com/psf/requests) - Synchronous HTTP client, used to check llama.cpp server readiness and interact with the server in sync mode.
+- [tqdm](https://github.com/tqdm/tqdm) - Progress bar utility, used to display download progress when fetching llama.cpp releases.
+- [openai-python](https://github.com/openai/openai-python) - OpenAI-compatible client, used to provide an OpenAI-style API interface for the server.
+- [python-dotenv](https://github.com/theskumar/python-dotenv) - Environment variable loader, used for configuration via `.env` files.
+- [platformdirs](https://github.com/tox-dev/platformdirs) - Cross-platform directory management, used to determine cache and data storage locations.
+- [pillow](https://github.com/python-pillow/Pillow) - Image processing library, used for multimodal (vision) input support.
