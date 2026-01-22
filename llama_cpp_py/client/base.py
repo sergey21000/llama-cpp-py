@@ -16,7 +16,8 @@ class LlamaBaseClient:
     opening_thinking_tags = ['<think>', '&lt;think&gt;']
     closing_thinking_tags = ['</think>', '&lt;/think&gt;']
     all_thinking_tags = [*opening_thinking_tags, *closing_thinking_tags]
-    
+
+
     @classmethod
     def _prepare_messages(
         cls,
@@ -64,6 +65,7 @@ class LlamaBaseClient:
         ]))
         return messages
 
+
     @staticmethod
     def _prepare_image(image: str | Path, resize_size: int | None) -> str:
         """
@@ -94,6 +96,7 @@ class LlamaBaseClient:
                 image_pil.save(buffer, format='PNG')
                 image = base64.b64encode(buffer.getvalue()).decode()
         return image
+
 
     @classmethod
     def _process_output_token(
