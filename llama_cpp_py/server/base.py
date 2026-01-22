@@ -77,6 +77,7 @@ class LlamaBaseServer:
         self.subprocess_kwargs = subprocess_kwargs
         logger.debug(f'LlamaBaseServer init, server_url: {self.server_url}')
 
+
     @staticmethod
     def process_log_output_chunk(chunk: bytes, state: dict, log_prefix: str) -> None:
         """Process a single byte chunk from server output stream.
