@@ -53,6 +53,7 @@ class LlamaReleaseManager(GithubReleaseManager):
                 if 'llama-cpp-py/releases' not in p
             )
 
+
     def ensure_release_dir(self, release_dir: Path, tag: str) -> None:
         """Ensure the release directory contains valid llama-server binaries."""
         if self.validate_release_dir(release_dir):
@@ -68,6 +69,7 @@ class LlamaReleaseManager(GithubReleaseManager):
             return
         raise ValueError(f'llama-server not found in {release_dir} or {bin_dir}')
 
+
     def validate_release_dir(self, release_dir: Path) -> None:
         """Validate that release directory contains llama-server executable."""
         if not release_dir.exists():
@@ -76,6 +78,7 @@ class LlamaReleaseManager(GithubReleaseManager):
         if not any(p.stem == 'llama-server' for p in release_dir.iterdir()):
             return False
         return True
+            
             
     @staticmethod
     def validate_release_zip_url(release_zip_url: str):
