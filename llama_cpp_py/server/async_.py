@@ -24,7 +24,7 @@ class LlamaAsyncServer(LlamaBaseServer):
         self,
         llama_dir: str | Path = '',
         release_manager: LlamaReleaseManager | None = None,
-        verbose: bool = False,
+        verbose: bool = True,
         wait_for_ready: bool = True,
         **subprocess_kwargs,
     ):
