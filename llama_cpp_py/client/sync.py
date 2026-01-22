@@ -82,7 +82,7 @@ class LlamaSyncClient(LlamaBaseClient):
         completions_kwargs: dict[str, Any],
     ) -> Iterator[str]:
         """
-        Low-level async generator for raw multimodal LLM tokens.
+        Low-level sync generator for raw multimodal LLM tokens.
         
         Handles image preprocessing, message formatting, and direct streaming
         from the OpenAI-compatible llama.cpp server API.
@@ -131,7 +131,7 @@ class LlamaSyncClient(LlamaBaseClient):
         completions_kwargs: dict[str, Any] = {},
     ) -> Iterator[str]:
         """
-        High-level async generator for multimodal LLM responses with thinking control.
+        High-level sync generator for multimodal LLM responses with thinking control.
         
         Provides a convenient interface for streaming LLM responses with
         configurable thinking mode handling, token accumulation, and image support.
