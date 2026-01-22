@@ -86,7 +86,7 @@ class LlamaBaseClient:
         """
         if isinstance(image, (str, Path)):
             image_path = Path(image)
-            if image_path.suffix.lower() in ['.png', '.jpg', '.jpeg']:
+            if image_path.suffix.lower() in ['.png', '.jpg', '.jpeg', '.webp']:
                 image_pil = Image.open(image_path).convert('RGB')
                 if resize_size:
                     image_pil.thumbnail((resize_size, resize_size))
