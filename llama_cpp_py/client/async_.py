@@ -81,7 +81,7 @@ class LlamaAsyncClient(LlamaBaseClient):
         image_path_or_base64: str | Path,
         resize_size: int,
         completions_kwargs: dict[str, Any],
-    ):
+    ) -> AsyncIterator[str]:
         """
         Low-level async generator for raw multimodal LLM tokens.
         
