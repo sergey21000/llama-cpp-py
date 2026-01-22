@@ -74,7 +74,6 @@ class LlamaAsyncClient(LlamaBaseClient):
             }
 
 
-
     async def _astream_chat_completion_tokens(
         self,
         user_message_or_messages: str,
@@ -119,6 +118,7 @@ class LlamaAsyncClient(LlamaBaseClient):
         async for chunk in stream_response:
             if (token := chunk.choices[0].delta.content) is not None:
                 yield token
+
 
     async def astream(
         self,
