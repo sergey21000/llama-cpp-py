@@ -151,7 +151,10 @@ class LlamaAsyncClient(LlamaBaseClient):
             Processed tokens or text chunks based on configuration.
             
         Example:
-            async for token in client.astream("Describe this image", image_path="photo.jpg"):
+            async for token in client.astream(
+                user_message_or_messages="Describe this image",
+                image_path_or_base64="photo.jpg",
+            ):
                 print(token, end="", flush=True)
                 
         Note:
