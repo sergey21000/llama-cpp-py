@@ -26,7 +26,7 @@ class LlamaBaseClient:
         image_path_or_base64: str | Path,
         resize_size: int | None,
         support_system_role: bool = True,
-    ) -> list[dict[str, str]]:
+    ) -> list[dict[str, str | list[str]]]:
         """
         Prepare messages for multimodal LLM input with optional image support.
         
@@ -94,8 +94,8 @@ class LlamaBaseClient:
                     image_pil.thumbnail((resize_size, resize_size))
                 buffer = io.BytesIO()
                 image_pil.save(buffer, format='PNG')
-                image = base64.b64encode(buffer.getvalue()).decode()
-        return image
+                image_base64 = base64.b64encode(buffer.getvalue()).decode()
+        return image_base64
 
 
     @classmethod
