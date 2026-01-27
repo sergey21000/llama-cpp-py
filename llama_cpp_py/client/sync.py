@@ -157,7 +157,7 @@ class LlamaSyncClient(LlamaBaseClient):
             Default image size (512px) balances visual detail with token efficiency.
             Thinking mode placeholder appears once when entering thinking tags.
         """
-        generator = self._astream_chat_completion_tokens(
+        generator = self._stream_chat_completion_tokens(
             user_message_or_messages=user_message_or_messages,
             system_prompt=system_prompt,
             completions_kwargs=completions_kwargs,
