@@ -26,7 +26,7 @@ class LlamaBaseClient:
         image_path_or_base64: str | Path,
         resize_size: int | None,
         support_system_role: bool = True,
-    ) -> list[dict[str, str | list[str]]]:
+    ) -> list[dict]:
         """
         Prepare messages for multimodal LLM input with optional image support.
         
