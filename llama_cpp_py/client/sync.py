@@ -73,6 +73,32 @@ class LlamaSyncClient(LlamaBaseClient):
             }
 
 
+    def get_props(self) -> dict | None:
+        """
+        Retrieve server global properties from Llama.cpp server.
+        
+        Makes a GET request to the /props endpoint to fetch current server configuration
+        and runtime properties. This endpoint is typically read-only unless the server
+        was started with the --props flag allowing modifications.
+        
+        Returns:
+            dict | None: Server properties as a dictionary if successful,
+                        None if the request fails or encounters an error.
+                        
+        Example:
+            >>> props = client.get_props()
+            >>> print(props.get('model_path'))
+            '/root/.cache/llama.cpp/Qwen_Qwen3-0.6B-Q4_K_M.gguf'
+        """
+        url = f'{self.openai_base_url}/props'
+        try:
+            return requests.get(url).json()
+        except requests.exceptions.RequestException as e:
+            logger.debug(f'Failed to fetch server properties: {e}')
+        except json.JSONDecodeError as e:
+            logger.debug(f'Invalid JSON response from /props endpoint: {e}')
+        
+        
     def _stream_chat_completion_tokens(
         self,
         user_message_or_messages: str | list[dict],

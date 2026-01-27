@@ -74,6 +74,40 @@ class LlamaAsyncClient(LlamaBaseClient):
             }
 
 
+    async def get_props(self) -> dict | None:
+        """
+        Retrieve server global properties from Llama.cpp server asynchronously.
+        
+        Makes an asynchronous GET request to the /props endpoint to fetch current 
+        server configuration and runtime properties. This endpoint is typically 
+        read-only unless the server was started with the --props flag allowing modifications.
+        
+        Returns:
+            dict | None: Server properties as a dictionary if successful,
+                        None if the request fails or encounters an error.
+                        
+        Example:
+            >>> props = await client.get_props()
+            >>> print(props.get('model_path'))
+            '/root/.cache/llama.cpp/Qwen_Qwen3-0.6B-Q4_K_M.gguf'
+            
+        Note:
+            This method requires an active aiohttp session. Ensure the client
+            has been properly initialized with a session or uses a shared session.
+        """
+        url = f'{self.openai_base_url}/props'
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=self.timeout) as response:
+                    return await response.json()
+        except aiohttp.ClientError as e:
+            logger.debug(f'Failed to fetch server properties: {e}')
+        except json.JSONDecodeError as e:
+            logger.debug(f'Invalid JSON response from /props endpoint: {e}')
+        except asyncio.TimeoutError as e:
+            logger.debug(f'Request timeout while fetching server properties: {e}')
+
+
     async def _astream_chat_completion_tokens(
         self,
         user_message_or_messages: str,
