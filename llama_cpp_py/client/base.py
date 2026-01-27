@@ -21,7 +21,7 @@ class LlamaBaseClient:
     @classmethod
     def _prepare_messages(
         cls,
-        user_message_or_messages: str,
+        user_message_or_messages: str | list[dict],
         system_prompt: str,
         image_path_or_base64: str | Path,
         resize_size: int | None,
