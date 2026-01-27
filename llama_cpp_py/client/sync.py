@@ -107,6 +107,9 @@ class LlamaSyncClient(LlamaBaseClient):
             image_path_or_base64=image_path_or_base64,
             resize_size=resize_size,
         )
+        if not messages:
+            logger.warning('Messages list is empty. Request will not be sent to the server.')
+            return
         logger.debug(f'Messages before openai chat.completions.create {messages}')
         stream_response = self.client.chat.completions.create(
             model='local',

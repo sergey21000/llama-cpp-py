@@ -5,6 +5,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from llama_cpp_py.logger import logger
+
 
 class LlamaBaseClient:
     """
@@ -59,15 +61,16 @@ class LlamaBaseClient:
             image=image_path_or_base64,
             resize_size=resize_size,
         )
-        messages.append(dict(role='user', content=[
-            dict(type='image_url', image_url=dict(url=f'data:image/png;base64,{image_base64}')),
-            dict(type='text', text=user_message_or_messages),
-        ]))
+        if image_base64:
+            messages.append(dict(role='user', content=[
+                dict(type='image_url', image_url=dict(url=f'data:image/png;base64,{image_base64}')),
+                dict(type='text', text=user_message_or_messages),
+            ]))
         return messages
 
 
     @classmethod
-    def _prepare_image(cls, image: str | Path, resize_size: int | None) -> str:
+    def _prepare_image(cls, image: str | Path, resize_size: int | None) -> str | None:
         """
         Prepare image for LLM input by resizing and converting to base64.
         
@@ -95,7 +98,12 @@ class LlamaBaseClient:
                 buffer = io.BytesIO()
                 image_pil.save(buffer, format='PNG')
                 image_base64 = base64.b64encode(buffer.getvalue()).decode()
-        return image_base64
+                return image_base64
+            else:
+                logger.warning(
+                    f'Image format {image_path.suffix} is not supported. ' 
+                    f'Expected one of: {cls.image_extension}'
+                )
 
 
     @classmethod
