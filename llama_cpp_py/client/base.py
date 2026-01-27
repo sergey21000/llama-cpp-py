@@ -16,7 +16,7 @@ class LlamaBaseClient:
     opening_thinking_tags = ['<think>', '&lt;think&gt;']
     closing_thinking_tags = ['</think>', '&lt;/think&gt;']
     all_thinking_tags = [*opening_thinking_tags, *closing_thinking_tags]
-
+    image_extension = ['.png', '.jpg', '.jpeg', '.webp']
 
     @classmethod
     def _prepare_messages(
@@ -66,8 +66,8 @@ class LlamaBaseClient:
         return messages
 
 
-    @staticmethod
-    def _prepare_image(image: str | Path, resize_size: int | None) -> str:
+    @classmethod
+    def _prepare_image(cls, image: str | Path, resize_size: int | None) -> str:
         """
         Prepare image for LLM input by resizing and converting to base64.
         
@@ -88,7 +88,7 @@ class LlamaBaseClient:
         """
         if isinstance(image, (str, Path)):
             image_path = Path(image)
-            if image_path.suffix.lower() in ['.png', '.jpg', '.jpeg', '.webp']:
+            if image_path.suffix.lower() in cls.image_extension:
                 image_pil = Image.open(image_path).convert('RGB')
                 if resize_size:
                     image_pil.thumbnail((resize_size, resize_size))
