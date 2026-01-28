@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from llama_cpp_py.logger import logger
+from llama_cpp_py.logger import debug_logger
 
 
 class LlamaBaseClient:
@@ -100,7 +100,7 @@ class LlamaBaseClient:
                 image_base64 = base64.b64encode(buffer.getvalue()).decode()
                 return image_base64
             else:
-                logger.warning(
+                debug_logger.warning(
                     f'Image format {image_path.suffix} is not supported. ' 
                     f'Expected one of: {cls.image_extension}'
                 )

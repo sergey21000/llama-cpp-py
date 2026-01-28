@@ -4,7 +4,7 @@ from typing import AsyncIterator, Any
 import aiohttp
 from openai import AsyncOpenAI
 
-from llama_cpp_py.logger import logger, status_logger
+from llama_cpp_py.logger import debug_logger, server_logger
 from llama_cpp_py.client.base import LlamaBaseClient
 
 
@@ -101,11 +101,11 @@ class LlamaAsyncClient(LlamaBaseClient):
                 async with session.get(url, timeout=self.timeout) as response:
                     return await response.json()
         except aiohttp.ClientError as e:
-            logger.debug(f'Failed to fetch server properties: {e}')
+            debug_logger.debug(f'Failed to fetch server properties: {e}')
         except json.JSONDecodeError as e:
-            logger.debug(f'Invalid JSON response from /props endpoint: {e}')
+            debug_logger.debug(f'Invalid JSON response from /props endpoint: {e}')
         except asyncio.TimeoutError as e:
-            logger.debug(f'Request timeout while fetching server properties: {e}')
+            debug_logger.debug(f'Request timeout while fetching server properties: {e}')
 
 
     async def _astream_chat_completion_tokens(
@@ -142,7 +142,10 @@ class LlamaAsyncClient(LlamaBaseClient):
             image_path_or_base64=image_path_or_base64,
             resize_size=resize_size,
         )
-        logger.debug(f'Messages before openai chat.completions.create {messages}')
+        if not messages:
+            debug_logger.warning('Messages list is empty. Request will not be sent to the server.')
+            return
+        debug_logger.debug(f'Messages before openai chat.completions.create {messages}')
         stream_response = await self.client.chat.completions.create(
             model='local',
             messages=messages,

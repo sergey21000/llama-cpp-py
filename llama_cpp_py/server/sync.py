@@ -8,7 +8,7 @@ import logging
 import requests
 from pathlib import Path
 
-from llama_cpp_py.logger import logger, status_logger
+from llama_cpp_py.logger import debug_logger, server_logger
 from llama_cpp_py.release_manager.manager import LlamaReleaseManager
 from llama_cpp_py.server.base import LlamaBaseServer
 
@@ -31,6 +31,7 @@ class LlamaSyncServer(LlamaBaseServer):
         
         Args:
             llama_dir: Directory containing llama-server executable
+                (env: LLAMACPP_DIR)
             host: Server host address (default: 127.0.0.1)
             port: Server port (default: 8080)
             release_manager: Optional pre-configured release manager
@@ -51,7 +52,7 @@ class LlamaSyncServer(LlamaBaseServer):
 
     def start(self) -> None:
         """Start the llama.cpp server synchronously."""
-        status_logger.info('llama.cpp server starting ...')
+        server_logger.info('llama.cpp server starting ...')
         self.process = subprocess.Popen(
             [self.start_server_cmd],
             stdout=subprocess.PIPE,
@@ -70,7 +71,7 @@ class LlamaSyncServer(LlamaBaseServer):
                 daemon=True,
             ).start()
         if not self.wait_for_ready:
-            status_logger.info('Server process started (not waiting for readiness)')
+            server_logger.info('Server process started (not waiting for readiness)')
             return
         try:
             server_is_ready = self.wait_for_server_ready(
@@ -80,7 +81,7 @@ class LlamaSyncServer(LlamaBaseServer):
             if not server_is_ready:
                 self.stop()
                 raise TimeoutError('Server did not start within the allotted time')
-            status_logger.info('llama.cpp server ready')
+            server_logger.info('llama.cpp server ready')
         except Exception:
             self.stop()
             raise
@@ -93,15 +94,15 @@ class LlamaSyncServer(LlamaBaseServer):
         self.process.terminate()
         try:
             self.process.wait(timeout=self.timeout_to_stop_process)
-            logger.info('llama.cpp server stopped correctly')
+            debug_logger.info('llama.cpp server stopped correctly')
         except subprocess.TimeoutExpired:
-            logger.info('The server did not respond to terminate(), killing it ...')
+            debug_logger.info('The server did not respond to terminate(), killing it ...')
             self.process.kill()
             self.process.wait()
         except ProcessLookupError:
-            logger.info('Process already terminated, nothing to stop')
+            debug_logger.info('Process already terminated, nothing to stop')
         self.process = None
-        status_logger.info('llama.cpp server stopped')
+        server_logger.info('llama.cpp server stopped')
 
 
     def log_output(self, stream: io.BufferedReader, log_prefix: str = '') -> None:
@@ -133,7 +134,7 @@ class LlamaSyncServer(LlamaBaseServer):
         while time.monotonic() - start_time < timeout:
             ret = self.process.poll() 
             if ret is not None:
-                status_logger.error(f'llama.cpp process exited unexpectedly with code {ret}')
+                server_logger.error(f'llama.cpp process exited unexpectedly with code {ret}')
                 return False
             try:
                 response = requests.get(url, timeout=2)
@@ -142,14 +143,14 @@ class LlamaSyncServer(LlamaBaseServer):
                 elif response.status_code == 503:
                     if not model_loading:
                         model_loading = True
-                        status_logger.info('Model is loading (503), waiting...')
+                        server_logger.info('Model is loading (503), waiting...')
                     start_time = time.monotonic()
                 else:
-                   logger.debug(f'Unexpected status code {response.status_code}, retrying...')
+                   debug_logger.debug(f'Unexpected status code {response.status_code}, retrying...')
             except requests.RequestException as e:
-                logger.debug(f'Connection error: {e}, retrying...')
+                debug_logger.debug(f'Connection error: {e}, retrying...')
             time.sleep(1)
-        status_logger.warning(f'Server did not become ready within {timeout}s')
+        server_logger.warning(f'Server did not become ready within {timeout}s')
         return False
 
 

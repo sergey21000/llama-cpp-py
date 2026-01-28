@@ -4,7 +4,7 @@ from pathlib import Path
 
 from platformdirs import user_data_dir
 
-from llama_cpp_py.logger import logger
+from llama_cpp_py.logger import debug_logger
 from llama_cpp_py.release_manager.base import GithubReleaseManager
 
 
@@ -26,23 +26,30 @@ class LlamaReleaseManager(GithubReleaseManager):
         
         Args:
             tag: Release tag name or 'latest' for the most recent release
+                (env: LLAMACPP_RELEASE_TAG)
             release_zip_url: Direct URL to specific llama.cpp release zip
+                (env: LLAMACPP_RELEASE_ZIP_URL)
             releases_dir: Local directory for releases (uses appdata if not specified)
+                (env: LLAMACPP_RELEASES_DIR)
             exclude_patterns: Patterns to exclude from asset selection
             priority_patterns: Patterns to prioritize when multiple assets match
         """
         releases_api_url = 'https://api.github.com/repos/ggml-org/llama.cpp/releases'
+        if tag == 'latest':
+            tag = os.getenv('LLAMACPP_RELEASE_TAG') or tag
         if not releases_dir:
-            releases_dir = os.getenv('RELEASES_DIR')
+            releases_dir = os.getenv('LLAMACPP_RELEASES_DIR')
             if not releases_dir:
                 releases_dir = Path(
                     user_data_dir('llama-cpp-py', appauthor=False)
                 ) / 'releases'
+        if not release_zip_url:
+            release_zip_url = os.getenv('LLAMACPP_RELEASE_ZIP_URL', '')
         super().__init__(
             releases_api_url=releases_api_url,
             releases_dir=releases_dir,
-            tag=tag,
             release_zip_url=release_zip_url,
+            tag=tag,
             exclude_patterns=exclude_patterns,
             priority_patterns=priority_patterns,
         )
@@ -73,7 +80,7 @@ class LlamaReleaseManager(GithubReleaseManager):
     def validate_release_dir(self, release_dir: Path) -> None:
         """Validate that release directory contains llama-server executable."""
         if not release_dir.exists():
-            logger.debug(f'Path {release_dir} not exists')
+            debug_logger.debug(f'Path {release_dir} not exists')
             return False
         if not any(p.stem == 'llama-server' for p in release_dir.iterdir()):
             return False

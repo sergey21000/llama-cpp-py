@@ -4,7 +4,7 @@ from typing import Iterator, Any
 import requests
 from openai import OpenAI
 
-from llama_cpp_py.logger import logger, status_logger
+from llama_cpp_py.logger import debug_logger, server_logger
 from llama_cpp_py.client.base import LlamaBaseClient
 
 
@@ -94,9 +94,9 @@ class LlamaSyncClient(LlamaBaseClient):
         try:
             return requests.get(url).json()
         except requests.exceptions.RequestException as e:
-            logger.debug(f'Failed to fetch server properties: {e}')
+            debug_logger.debug(f'Failed to fetch server properties: {e}')
         except json.JSONDecodeError as e:
-            logger.debug(f'Invalid JSON response from /props endpoint: {e}')
+            debug_logger.debug(f'Invalid JSON response from /props endpoint: {e}')
         
         
     def _stream_chat_completion_tokens(
@@ -134,9 +134,9 @@ class LlamaSyncClient(LlamaBaseClient):
             resize_size=resize_size,
         )
         if not messages:
-            logger.warning('Messages list is empty. Request will not be sent to the server.')
+            debug_logger.warning('Messages list is empty. Request will not be sent to the server.')
             return
-        logger.debug(f'Messages before openai chat.completions.create {messages}')
+        debug_logger.debug(f'Messages before openai chat.completions.create {messages}')
         stream_response = self.client.chat.completions.create(
             model='local',
             messages=messages,

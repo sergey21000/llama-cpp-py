@@ -9,7 +9,7 @@ from pathlib import Path
 
 import aiohttp
 
-from llama_cpp_py.logger import logger, status_logger
+from llama_cpp_py.logger import debug_logger, server_logger
 from llama_cpp_py.release_manager.manager import LlamaReleaseManager
 from llama_cpp_py.server.base import LlamaBaseServer
 
@@ -17,8 +17,17 @@ from llama_cpp_py.server.base import LlamaBaseServer
 class LlamaAsyncServer(LlamaBaseServer):
     """Asynchronous implementation of llama.cpp server manager.
     
-    Manages server process using asyncio subprocess with async output logging.
-    Suitable for async applications and web frameworks.
+        Args:
+            llama_dir: Directory containing llama-server executable
+                (env: LLAMACPP_DIR)
+            host: Server host address (default: 127.0.0.1)
+            port: Server port (default: 8080)
+            release_manager: Optional pre-configured release manager
+            verbose: Enable verbose logging of server output
+            wait_for_ready: If True, waits for server health check before start() completes;
+                           if False, returns immediately after process launch
+            **subprocess_kwargs: Additional arguments for subprocess.Popen 
+                https://docs.python.org/3/library/subprocess.html#popen-constructor
     """
     def __init__(
         self,
@@ -54,7 +63,7 @@ class LlamaAsyncServer(LlamaBaseServer):
 
     async def start(self) -> bool:
         """Start the llama.cpp server asynchronously."""
-        status_logger.info('llama.cpp server starting ...')
+        server_logger.info('llama.cpp server starting ...')
         self.process = await asyncio.create_subprocess_exec(
             self.start_server_cmd,
             stdout=asyncio.subprocess.PIPE,
@@ -65,7 +74,7 @@ class LlamaAsyncServer(LlamaBaseServer):
             asyncio.create_task(self.log_output(stream=self.process.stdout))
             asyncio.create_task(self.log_output(stream=self.process.stderr))
         if not self.wait_for_ready:
-            status_logger.info('Server process started (not waiting for readiness)')
+            server_logger.info('Server process started (not waiting for readiness)')
             return
         try:
             server_is_ready = await self.wait_for_server_ready(
@@ -75,7 +84,7 @@ class LlamaAsyncServer(LlamaBaseServer):
             if not server_is_ready:
                 await self.stop()
                 raise TimeoutError('Server did not start within the allotted time')
-            status_logger.info('llama.cpp server ready')
+            server_logger.info('llama.cpp server ready')
         except Exception:
             await self.stop()
             raise
@@ -91,15 +100,15 @@ class LlamaAsyncServer(LlamaBaseServer):
                 self.process.wait(),
                 timeout=self.timeout_to_stop_process,
             )
-            logger.info('llama.cpp server stopped correctly')
+            debug_logger.info('llama.cpp server stopped correctly')
         except asyncio.TimeoutError:
-            logger.info('The server did not respond to terminate(), killing it ...')
+            debug_logger.info('The server did not respond to terminate(), killing it ...')
             self.process.kill()
             await self.process.wait()
         except ProcessLookupError:
-            logger.info('Process already terminated, nothing to stop')
+            debug_logger.info('Process already terminated, nothing to stop')
         self.process = None
-        status_logger.info('llama.cpp server stopped')
+        server_logger.info('llama.cpp server stopped')
 
 
     async def log_output(self, stream: asyncio.StreamReader, log_prefix: str = '') -> None:
@@ -131,7 +140,7 @@ class LlamaAsyncServer(LlamaBaseServer):
             while time.monotonic() - start_time < timeout:
                 ret = self.process.returncode
                 if ret is not None:
-                    status_logger.error(f'llama.cpp process exited unexpectedly with code {ret}')
+                    server_logger.error(f'llama.cpp process exited unexpectedly with code {ret}')
                     return False
                 try:
                     async with session.get(url, timeout=aiohttp.ClientTimeout(total=2)) as response:
@@ -140,14 +149,14 @@ class LlamaAsyncServer(LlamaBaseServer):
                         elif response.status == 503:
                             if not model_loading:
                                 model_loading = True
-                                status_logger.info('Model is loading (503), waiting...')
+                                server_logger.info('Model is loading (503), waiting...')
                             start_time = time.monotonic()
                         else:
-                            logger.debug(f'Unexpected status code {response.status}, retrying...')
+                            debug_logger.debug(f'Unexpected status code {response.status}, retrying...')
                 except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-                    logger.debug(f'Connection error: {e}, retrying...')
+                    debug_logger.debug(f'Connection error: {e}, retrying...')
                 await asyncio.sleep(1)
-        status_logger.warning(f'Server did not become ready within {timeout}s')
+        server_logger.warning(f'Server did not become ready within {timeout}s')
         return False
 
 

@@ -196,6 +196,44 @@ async with LlamaAsyncServer() as server:
 ```
 
 
+## Enviroment Variables
+
+Environment variables for llama-cpp-py
+
+[!NOTE]
+Function arguments override environment variables. For example:
+```python
+server = LlamaSyncServer(llama_dir='/path/bin')
+```
+will take precedence over the `LLAMACPP_DIR` variable
+
+```env
+# Server startup wait timeout in seconds.
+# Increase if model loading takes a long time.
+# (default: 300)
+LLAMACPP_SERVER_TIMEOUT_WAIT=900
+
+# llama.cpp release tag. If set to "latest", the most recent release will be downloaded.
+# (default: "latest")
+LLAMACPP_RELEASE_TAG=b7806
+
+# Direct download link to the archive from the llama.cpp releases page.
+# Takes higher priority than LLAMACPP_RELEASE_TAG.
+# (default: "")
+LLAMACPP_RELEASE_ZIP_URL=https://github.com/ggml-org/llama.cpp/releases/download/b7806/llama-b7806-bin-win-cuda-13.1-x64.zip
+
+# Path to a precompiled llama.cpp directory.
+# Takes the highest priority, overriding LLAMACPP_RELEASE_TAG and LLAMACPP_RELEASE_ZIP_URL.
+# (default: "")
+LLAMACPP_DIR="/content/llama.cpp/build/bin"
+
+# Logging level for llama-cpp-py (uses loguru).
+# A separate global setup via logger.add() also works.
+# (default: "")
+LLAMACPP_LOG_LEVEL=DEBUG
+```
+
+
 ## Troubleshooting
 
 If the server fails to start or behaves unexpectedly, check the following:
@@ -255,3 +293,4 @@ See [platformdirs examle output](https://github.com/tox-dev/platformdirs?tab=rea
 - [python-dotenv](https://github.com/theskumar/python-dotenv) - Environment variable loader, used for configuration via `.env` files.
 - [platformdirs](https://github.com/tox-dev/platformdirs) - Cross-platform directory management, used to determine cache and data storage locations.
 - [pillow](https://github.com/python-pillow/Pillow) - Image processing library, used for multimodal (vision) input support.
+- [loguru](https://github.com/Delgan/loguru) - logging

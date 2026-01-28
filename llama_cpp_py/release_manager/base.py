@@ -7,7 +7,7 @@ from pathlib import Path
 import requests
 from tqdm import tqdm
 
-from llama_cpp_py.logger import logger
+from llama_cpp_py.logger import debug_logger
 
 
 class GithubReleaseManager:
@@ -20,8 +20,8 @@ class GithubReleaseManager:
         self,
         releases_api_url: str,
         releases_dir: str | Path,
-        tag: str = 'latest',
-        release_zip_url: str = '',
+        tag: str,
+        release_zip_url: str,
         exclude_patterns: list[str] | None = None,
         priority_patterns: list[str] | None = None,
     ):
@@ -58,7 +58,7 @@ class GithubReleaseManager:
             extract_dir=self.release_dir,
         )
         else:
-            logger.info(f'Using cached release: {self.release_dir}')
+            debug_logger.info(f'Using cached release: {self.release_dir}')
 
 
     @staticmethod
@@ -171,7 +171,7 @@ class GithubReleaseManager:
                 if len(matched_assets) == 1:
                     break
         if len(matched_assets) > 1:
-            logger.warning(
+            debug_logger.warning(
                 f'More than one archive match found, the first one will be selected: '
                 f'{[d.get("name") for d in matched_assets]}'
             )
@@ -262,7 +262,7 @@ class GithubReleaseManager:
         """Download and extract zip file, optionally setting execute permissions."""
         extract_dir.mkdir(exist_ok=True, parents=True)
         zip_path = extract_dir / Path(zip_url).name
-        logger.info(f'Loading file {zip_url} to path {zip_path}')
+        debug_logger.info(f'Loading file {zip_url} to path {zip_path}')
         cls.download_file(file_url=zip_url, file_path=zip_path)
         cls.extract_archive(zip_or_tar_path=zip_path, extract_dir=extract_dir)
         zip_path.unlink(missing_ok=True)

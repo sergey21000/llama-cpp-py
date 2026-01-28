@@ -4,7 +4,7 @@ import platform
 import logging
 from pathlib import Path
 
-from llama_cpp_py.logger import logger
+from llama_cpp_py.logger import debug_logger
 from llama_cpp_py.release_manager.manager import LlamaReleaseManager
 
 
@@ -27,6 +27,7 @@ class LlamaBaseServer:
         Args:
             llama_dir: Directory containing llama-server executable. If not provided,
                      uses the release manager's directory.
+                (env: LLAMACPP_DIR)
             release_manager: Pre-configured LlamaReleaseManager instance for 
                            automatic binary management. Created if not provided.
             verbose: Enable verbose logging of server output to stdout/stderr
@@ -62,9 +63,10 @@ class LlamaBaseServer:
         self.server_url = f'http://{self.host}:{self.port}'
         self.openai_base_url = f'{self.server_url}/v1'
         self.health_url  = f'{self.server_url}/health'
-        timeout_wait_for_server_ready = os.getenv('TIMEOUT_WAIT_FOR_SERVER') or 300
+        timeout_wait_for_server_ready = os.getenv('LLAMACPP_SERVER_TIMEOUT_WAIT') or 300
         self.timeout_wait_for_server_ready = int(timeout_wait_for_server_ready)
         self.timeout_to_stop_process = 3
+        llama_dir = llama_dir or os.getenv('LLAMACPP_DIR')
         if not llama_dir:
             if not release_manager:
                 release_manager = LlamaReleaseManager()
@@ -76,7 +78,7 @@ class LlamaBaseServer:
         self.verbose = verbose
         self.wait_for_ready = wait_for_ready
         self.subprocess_kwargs = subprocess_kwargs
-        logger.debug(f'LlamaBaseServer init, server_url: {self.server_url}')
+        debug_logger.debug(f'LlamaBaseServer init, server_url: {self.server_url}')
 
 
     @staticmethod
