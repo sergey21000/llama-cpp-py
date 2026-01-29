@@ -5,12 +5,12 @@ from loguru import logger
 
 if 0 in logger._core.handlers:
     logger.remove(0)
+    logger.add(
+        sys.stderr,
+        level='INFO',
+        filter=lambda record: 'llama_server' in record['extra'],
+    )
 
-logger.add(
-    sys.stderr,
-    level='INFO',
-    filter=lambda record: 'llama_server' in record['extra'],
-)
 server_logger = logger.bind(llama_server=True)
 debug_logger = logger.bind(llama_debug=True)
 
