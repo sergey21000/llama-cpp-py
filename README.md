@@ -91,7 +91,7 @@ load_dotenv(dotenv_path='env.llama')
 # auto-download last release and start server
 # set verbose=True to display server logs
 server = LlamaSyncServer()
-server.start(verbose=False)
+server.start(verbose=True)
 
 
 # sending requests with OpenAI client
