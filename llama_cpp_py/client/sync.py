@@ -1,3 +1,4 @@
+import pprint
 from pathlib import Path
 from typing import Iterator, Any
 
@@ -134,9 +135,13 @@ class LlamaSyncClient(LlamaBaseClient):
             resize_size=resize_size,
         )
         if not messages:
-            debug_logger.warning('Messages list is empty. Request will not be sent to the server.')
+            debug_logger.warning(
+                'Messages list is empty. Request will not be sent to the server.'
+            )
             return
-        debug_logger.debug(f'Messages before openai chat.completions.create {messages}')
+        debug_logger.debug(
+            f'Messages before openai chat.completions.create:\n{pprint.pformat(messages)}'
+        )
         stream_response = self.client.chat.completions.create(
             model='local',
             messages=messages,
