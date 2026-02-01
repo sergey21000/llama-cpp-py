@@ -26,6 +26,8 @@ class LlamaSyncClient(LlamaBaseClient):
             api_key: API key for authentication. For llama.cpp servers that do not
                 require authentication, a placeholder such as '-' can be used.
         """
+        if '0.0.0.0' in openai_base_url:
+            openai_base_url = openai_base_url.replace('0.0.0.0', '127.0.0.1')
         self.openai_base_url = openai_base_url
         self.client = OpenAI(
             base_url=openai_base_url,
