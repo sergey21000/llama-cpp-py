@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llama-cpp-py"
-version = "0.1.24"
+version = "0.1.25"
 description = "Python wrapper for running the llama.cpp server"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -25,6 +25,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "platformdirs>=4.5.0",
     "pillow>=11",
+	"loguru>=0.7.3",
 ]
 
 [project.optional-dependencies]

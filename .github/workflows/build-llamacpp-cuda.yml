@@ -17,6 +17,7 @@ env:
     -DLLAMA_BUILD_TOOLS=ON
     -DLLAMA_BUILD_SERVER=ON
     -DGGML_RPC=ON
+    -DCMAKE_CUDA_ARCHITECTURES=75
 
 jobs:
   linux-cuda:
@@ -27,13 +28,6 @@ jobs:
         cuda: ['12.4.1']
 
     steps:
-      - name: Clean up disk space before build
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          docker system prune -af || true
-
       - name: Checkout llama.cpp
         uses: actions/checkout@v6
         with:
@@ -46,6 +40,13 @@ jobs:
         with:
           key: linux-cuda-${{ matrix.cuda }}
           evict-old-files: 1d
+
+      - name: Clean up disk space before build
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          docker system prune -af || true
 
       - name: Install dependencies
         run: |
@@ -64,21 +65,35 @@ jobs:
             -DCMAKE_INSTALL_RPATH='$ORIGIN' \
             -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
             $CMAKE_ARGS
-          cmake --build build --config Release -j $(nproc) --target ggml-cuda
+          cmake --build build --config Release -j $(nproc)
 
       - name: Determine tag name
         id: tag
-        uses: ./.github/actions/get-tag-name
+        run: |
+          TAG=$(git describe --tags --always --abbrev=0 2>/dev/null || echo "b$(git rev-list --count HEAD)")
+          echo "name=$TAG" >> $GITHUB_OUTPUT
+          echo "Tag name: $TAG"
 
       - name: Pack artifacts
         run: |
-          mkdir -p dist
-          cp build/bin/libggml-cuda.so dist/
+          cp LICENSE ./build/bin/
           tar -czvf llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz \
-            --transform "s,^,llama-${{ steps.tag.outputs.name }}/," -C dist .
+            --transform "s,./,llama-${{ steps.tag.outputs.name }}/," -C ./build/bin .
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6
         with:
           name: llama-bin-ubuntu-cuda-${{ matrix.cuda }}-x64
           path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz
+
+      - name: Create or update release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: ${{ steps.tag.outputs.name }}
+          files: llama-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz
+          # files: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
