@@ -27,6 +27,13 @@ jobs:
         cuda: ['12.4.1']
 
     steps:
+      - name: Clean up disk space before build
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          docker system prune -af || true
+
       - name: Checkout llama.cpp
         uses: actions/checkout@v6
         with:
