@@ -88,7 +88,6 @@ jobs:
           name: ${{ steps.tag.outputs.name }} (CUDA)
           files: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz
           body: |
-              Prebuilt llama.cpp binaries with CUDA support for Linux x64.
-              CUDA version: ${{ matrix.cuda }}
+              Prebuilt llama.cpp binaries with CUDA support for Linux x64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
