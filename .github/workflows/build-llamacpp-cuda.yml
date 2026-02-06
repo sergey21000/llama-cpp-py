@@ -25,7 +25,7 @@ jobs:
 
     strategy:
       matrix:
-        cuda: ['12.4']
+        cuda: ['12.4.1']
 
     steps:
       - name: Checkout llama.cpp
