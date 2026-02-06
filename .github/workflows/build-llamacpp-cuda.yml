@@ -17,7 +17,6 @@ env:
     -DLLAMA_BUILD_TOOLS=ON
     -DLLAMA_BUILD_SERVER=ON
     -DGGML_RPC=ON
-    -DCMAKE_CUDA_ARCHITECTURES=75
 
 jobs:
   linux-cuda:
@@ -25,7 +24,7 @@ jobs:
 
     strategy:
       matrix:
-        cuda: ['12.5']
+        cuda: ['12.4.1']
 
     steps:
       - name: Checkout llama.cpp
@@ -41,29 +40,24 @@ jobs:
           key: linux-cuda-${{ matrix.cuda }}
           evict-old-files: 1d
 
-      - name: Install GCC 10
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-10 g++-10 libssl-dev
+          sudo apt-get install -y build-essential libssl-dev
 
       - name: Install CUDA Toolkit
-        uses: Jimver/cuda-toolkit@v0.2.30
+        uses: Jimver/cuda-toolkit@v0.2.16
         with:
           cuda: ${{ matrix.cuda }}
-          # method: network
 
-      - name: Build ggml-cuda
+      - name: Build
         run: |
-          cmake -S . -B build \
+          cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_COMPILER=gcc-10 \
-            -DCMAKE_CXX_COMPILER=g++-10 \
-            -DCMAKE_CUDA_HOST_COMPILER=g++-10 \
             -DCMAKE_INSTALL_RPATH='$ORIGIN' \
             -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
             $CMAKE_ARGS
-
-          cmake --build build -j $(nproc) --target ggml-cuda
+          cmake --build build --config Release -j $(nproc) --target ggml-cuda
 
       - name: Determine tag name
         id: tag
@@ -74,20 +68,10 @@ jobs:
           mkdir -p dist
           cp build/bin/libggml-cuda.so dist/
           tar -czvf llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz \
-            -C dist .
+            --transform "s,^,llama-${{ steps.tag.outputs.name }}/," -C dist .
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6
         with:
           name: llama-bin-ubuntu-cuda-${{ matrix.cuda }}-x64
           path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.tag.outputs.name }}
-          name: ${{ steps.tag.outputs.name }}
-          files: |
-            llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
