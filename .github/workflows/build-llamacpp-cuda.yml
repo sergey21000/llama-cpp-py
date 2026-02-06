@@ -8,17 +8,24 @@ permissions:
 
 env:
   CMAKE_ARGS: >
+    -DGGML_BACKEND_DL=ON
+    -DGGML_NATIVE=OFF
+    -DGGML_CPU=OFF
+    -DGGML_CUDA=ON
     -DLLAMA_BUILD_EXAMPLES=OFF
     -DLLAMA_BUILD_TESTS=OFF
     -DLLAMA_BUILD_TOOLS=ON
     -DLLAMA_BUILD_SERVER=ON
     -DGGML_RPC=ON
-    -DGGML_CUDA=ON
-    -DCMAKE_CUDA_ARCHITECTURES=70
+    -DCMAKE_CUDA_ARCHITECTURES=75
 
 jobs:
-  build-cuda-linux-x64:
+  linux-cuda:
     runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        cuda: ['12.4']
 
     steps:
       - name: Checkout llama.cpp
@@ -31,30 +38,32 @@ jobs:
       - name: ccache
         uses: ggml-org/ccache-action@v1.2.16
         with:
-          key: ubuntu-cuda-cmake-x64
+          key: linux-cuda-${{ matrix.cuda }}
           evict-old-files: 1d
 
-      - name: Install dependencies
+      - name: Install GCC 10
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            libssl-dev \
-            nvidia-cuda-toolkit
+          sudo apt-get install -y gcc-10 g++-10 libssl-dev
 
-      - name: Build (CUDA)
+      - name: Install CUDA Toolkit
+        uses: Jimver/cuda-toolkit@v0.2.16
+        with:
+          cuda: ${{ matrix.cuda }}
+          method: network
+
+      - name: Build ggml-cuda
         run: |
-          cmake -B build \
+          cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=gcc-10 \
+            -DCMAKE_CXX_COMPILER=g++-10 \
+            -DCMAKE_CUDA_HOST_COMPILER=g++-10 \
             -DCMAKE_INSTALL_RPATH='$ORIGIN' \
             -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
-            -DGGML_BACKEND_DL=ON \
-            -DGGML_NATIVE=OFF \
-            -DGGML_CPU_ALL_VARIANTS=ON \
-            -DLLAMA_FATAL_WARNINGS=ON \
             $CMAKE_ARGS
 
-          cmake --build build -j $(nproc)
+          cmake --build build -j $(nproc) --target ggml-cuda
 
       - name: Determine tag name
         id: tag
@@ -62,13 +71,23 @@ jobs:
 
       - name: Pack artifacts
         run: |
-          cp LICENSE build/bin/
-          tar -czvf llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-x64.tar.gz \
-            --transform "s,./,llama-${{ steps.tag.outputs.name }}/," \
-            -C build/bin .
+          mkdir -p dist
+          cp build/bin/libggml-cuda.so dist/
+          tar -czvf llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz \
+            -C dist .
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: llama-bin-ubuntu-cuda-x64
-          path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-x64.tar.gz
+          name: llama-bin-ubuntu-cuda-${{ matrix.cuda }}-x64
+          path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: ${{ steps.tag.outputs.name }}
+          files: |
+            llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-x64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
