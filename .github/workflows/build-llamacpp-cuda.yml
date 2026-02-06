@@ -90,10 +90,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.name }}
-          name: ${{ steps.tag.outputs.name }}
-          files: llama-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz
-          # files: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz
+          name: Release ${{ steps.tag.outputs.name }}
+          files: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz
           draft: false
           prerelease: false
+          fail_on_unmatched_files: true
+          body: |
+            llama.cpp CUDA build for linux x64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
