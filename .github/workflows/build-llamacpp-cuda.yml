@@ -25,7 +25,7 @@ jobs:
 
     strategy:
       matrix:
-        cuda: ['12.4.1']
+        cuda: ['12.5']
 
     steps:
       - name: Checkout llama.cpp
@@ -88,6 +88,6 @@ jobs:
           tag_name: ${{ steps.tag.outputs.name }}
           name: ${{ steps.tag.outputs.name }}
           files: |
-            llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-x64.tar.gz
+            llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-x64.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
