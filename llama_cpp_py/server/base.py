@@ -1,7 +1,7 @@
 import os
 import io
+import sys
 import platform
-import logging
 from pathlib import Path
 
 from llama_cpp_py.logger import debug_logger
@@ -82,46 +82,10 @@ class LlamaBaseServer:
 
 
     @staticmethod
-    def process_log_output_chunk(chunk: bytes, state: dict, log_prefix: str) -> None:
-        """Process a single byte chunk from server output stream.
-        
-        Handles carriage returns for dynamic progress updates and newlines for regular output.
-        Updates the parsing state dictionary in-place.
-        
-        Args:
-            chunk: Single byte to process from the output stream
-            state: Dictionary containing parsing state with keys:
-                - 'buffer': accumulated bytes as bytes
-                - 'last_was_cr': boolean indicating if last operation was carriage return
-            log_prefix: Prefix to add to output lines for stream identification
-        
-        Note:
-            - Carriage return (b'\\r') lines are treated as progress updates and printed in-place
-            - Newline (b'\\n') lines are treated as regular output and printed on new lines
-            - State dictionary is modified in-place with updated buffer and flags
-        """
-        state['buffer'] += chunk
-        if chunk == b'\r':
-            # dynamic update (progress)
-            try:
-                line = state['buffer'][:-1].decode().strip()
-                if line:
-                    text = f'\r{log_prefix}: {line}' if log_prefix else f'\r{line}'
-                    print(text, end='', flush=True)
-                    state['last_was_cr'] = True
-            except UnicodeDecodeError:
-                pass
-            state['buffer'] = b''
-        elif chunk == b'\n':
-            # a regular line
-            try:
-                line = state['buffer'][:-1].decode().strip()
-                if state['last_was_cr']:
-                    print()
-                    state['last_was_cr'] = False
-                if line:
-                    text = f'{log_prefix}: {line}' if log_prefix else line
-                    print(text)
-            except UnicodeDecodeError:
-                pass
-            state['buffer'] = b''
+    def is_jupyter_runtime():
+        """Checking that the runtime environment is Jupyter or Colab"""
+        return (
+            'google.colab' in sys.modules or
+            'ipykernel' in sys.modules or
+            'jupyter' in sys.modules
+        )

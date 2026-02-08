@@ -1,12 +1,15 @@
 import os
 import io
+import sys
 import time
 import threading
 import subprocess
 import platform
-import logging
 import requests
 from pathlib import Path
+
+if platform.system() != 'Windows':
+    import pty
 
 from llama_cpp_py.logger import debug_logger, server_logger
 from llama_cpp_py.release_manager.manager import LlamaReleaseManager
@@ -53,23 +56,37 @@ class LlamaSyncServer(LlamaBaseServer):
     def start(self) -> None:
         """Start the llama.cpp server synchronously."""
         server_logger.info('llama.cpp server starting ...')
-        self.process = subprocess.Popen(
-            [self.start_server_cmd],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            **self.subprocess_kwargs,
-        )
-        if self.verbose:
-            threading.Thread(
-                target=self.log_output,
-                kwargs=dict(stream=self.process.stdout),
-                daemon=True,
-            ).start()
-            threading.Thread(
-                target=self.log_output,
-                kwargs=dict(stream=self.process.stderr),
-                daemon=True,
-            ).start()
+        if not self.verbose:
+            self.process = subprocess.Popen(
+                [self.start_server_cmd],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                **self.subprocess_kwargs,
+            )
+        else:
+            if platform.system() != 'Windows':
+                raise RuntimeError('PTY is not supported on Windows')
+            if not self.is_jupyter_runtime():
+                self.process = subprocess.Popen(
+                    [self.start_server_cmd],
+                    stdout=sys.stdout,
+                    stderr=sys.stderr,
+                    **self.subprocess_kwargs,
+                )
+            else:
+                master_fd, slave_fd = pty.openpty()
+                self.process = subprocess.Popen(
+                    [self.start_server_cmd],
+                    stdout=slave_fd,
+                    stderr=slave_fd,
+                    **self.subprocess_kwargs,
+                )
+                os.close(slave_fd)
+                self.pty_master_fd = master_fd
+                threading.Thread(
+                    target=self.log_output_pty,
+                    daemon=True,
+                ).start()
         if not self.wait_for_ready:
             server_logger.info('Server process started (not waiting for readiness)')
             return
@@ -85,6 +102,23 @@ class LlamaSyncServer(LlamaBaseServer):
         except Exception:
             self.stop()
             raise
+
+
+    def log_output_pty(self) -> None:
+        """Read and forward llama.cpp server output from a pseudo-terminal (PTY).
+
+        Used in Jupyter/Colab environments to preserve TTY semantics required for
+        dynamic progress bar rendering, which is disabled when stdout is a PIPE.
+        """
+        state = dict(buffer=b'', last_was_cr=False)
+        while True:
+            try:
+                chunk = os.read(self.pty_master_fd, 1)
+            except OSError:
+                break
+            if not chunk:
+                break
+            self.process_log_output_chunk(chunk, state, '')
 
 
     def stop(self) -> None:
@@ -103,28 +137,6 @@ class LlamaSyncServer(LlamaBaseServer):
             debug_logger.info('Process already terminated, nothing to stop')
         self.process = None
         server_logger.info('llama.cpp server stopped')
-
-
-    def log_output(self, stream: io.BufferedReader, log_prefix: str = '') -> None:
-        """Log server output from the given stream in a separate thread.
-    
-        Handles both regular output lines and dynamic progress updates. Progress lines
-        (ending with carriage return) are updated in-place, while regular lines
-        are printed on new lines.
-        
-        Args:
-            stream: Binary stream to read output from (stdout/stderr)
-            log_prefix: Optional prefix to add to each output line for identification
-        """
-        state = dict(buffer=b'', last_was_cr=False)
-        while True:
-            chunk = stream.read(1)
-            if not chunk:
-                break
-            self.process_log_output_chunk(chunk, state, log_prefix)
-        if state['last_was_cr']:
-            print()
-        stream.close()
 
 
     def wait_for_server_ready(self, url: str, timeout: int | float) -> bool:

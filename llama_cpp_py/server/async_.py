@@ -1,11 +1,15 @@
 import os
 import io
+import sys
 import asyncio
 import time
 import threading
 import subprocess
 import platform
 from pathlib import Path
+
+if platform.system() != 'Windows':
+    import pty
 
 import aiohttp
 
@@ -64,15 +68,37 @@ class LlamaAsyncServer(LlamaBaseServer):
     async def start(self) -> bool:
         """Start the llama.cpp server asynchronously."""
         server_logger.info('llama.cpp server starting ...')
-        self.process = await asyncio.create_subprocess_exec(
-            self.start_server_cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            **self.subprocess_kwargs,
-        )
-        if self.verbose:
-            asyncio.create_task(self.log_output(stream=self.process.stdout))
-            asyncio.create_task(self.log_output(stream=self.process.stderr))
+        if not self.verbose:
+            self.process = await asyncio.create_subprocess_exec(
+                self.start_server_cmd,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+                **self.subprocess_kwargs,
+            )
+        else:
+            if not self.is_jupyter_runtime():
+                self.process = await asyncio.create_subprocess_exec(
+                    self.start_server_cmd,
+                    stdout=sys.stdout,
+                    stderr=sys.stderr,
+                    **self.subprocess_kwargs,
+                )
+            else:
+                if platform.system() != 'Windows':
+                    raise RuntimeError('PTY is not supported on Windows')
+                master_fd, slave_fd = pty.openpty()
+                self.process = await asyncio.create_subprocess_exec(
+                    self.start_server_cmd,
+                    stdout=slave_fd,
+                    stderr=slave_fd,
+                    **self.subprocess_kwargs,
+                )
+                os.close(slave_fd)
+                self.pty_master_fd = master_fd
+                threading.Thread(
+                    target=self.log_output_pty,
+                    daemon=True,
+                ).start()
         if not self.wait_for_ready:
             server_logger.info('Server process started (not waiting for readiness)')
             return
@@ -110,27 +136,6 @@ class LlamaAsyncServer(LlamaBaseServer):
         self.process = None
         server_logger.info('llama.cpp server stopped')
 
-
-    async def log_output(self, stream: asyncio.StreamReader, log_prefix: str = '') -> None:
-        """Log server output from the given stream in a separate thread.
-    
-        Handles both regular output lines and dynamic progress updates. Progress lines
-        (ending with carriage return) are updated in-place, while regular lines
-        are printed on new lines.
-        
-        Args:
-            stream: Binary stream to read output from (stdout/stderr)
-            log_prefix: Optional prefix to add to each output line for identification
-        """
-        state = dict(buffer=b'', last_was_cr=False)
-        while True:
-            chunk = await stream.read(1)
-            if not chunk:
-                break
-            self.process_log_output_chunk(chunk, state, log_prefix)
-        if state['last_was_cr']:
-            print()
-        
 
     async def wait_for_server_ready(self, url: str, timeout: int | float) -> bool:
         """Wait asynchronously for server to become ready and respond to health checks."""
