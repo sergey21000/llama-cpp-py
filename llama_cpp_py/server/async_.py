@@ -84,8 +84,6 @@ class LlamaAsyncServer(LlamaBaseServer):
                     **self.subprocess_kwargs,
                 )
             else:
-                if platform.system() != 'Windows':
-                    raise RuntimeError('PTY is not supported on Windows')
                 master_fd, slave_fd = pty.openpty()
                 self.process = await asyncio.create_subprocess_exec(
                     self.start_server_cmd,

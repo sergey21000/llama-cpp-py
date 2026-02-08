@@ -89,3 +89,20 @@ class LlamaBaseServer:
             'ipykernel' in sys.modules or
             'jupyter' in sys.modules
         )
+
+
+    def log_output_pty(self) -> None:
+        """Read and forward llama.cpp server output from a pseudo-terminal (PTY).
+
+        Used in Jupyter/Colab environments to preserve TTY semantics required for
+        dynamic progress bar rendering, which is disabled when stdout is a PIPE.
+        """
+        state = dict(buffer=b'', last_was_cr=False)
+        while True:
+            try:
+                chunk = os.read(self.pty_master_fd, 1)
+            except OSError:
+                break
+            if not chunk:
+                break
+            self.process_log_output_chunk(chunk, state, '')

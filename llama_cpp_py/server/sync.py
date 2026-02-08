@@ -64,8 +64,6 @@ class LlamaSyncServer(LlamaBaseServer):
                 **self.subprocess_kwargs,
             )
         else:
-            if platform.system() != 'Windows':
-                raise RuntimeError('PTY is not supported on Windows')
             if not self.is_jupyter_runtime():
                 self.process = subprocess.Popen(
                     [self.start_server_cmd],
@@ -102,23 +100,6 @@ class LlamaSyncServer(LlamaBaseServer):
         except Exception:
             self.stop()
             raise
-
-
-    def log_output_pty(self) -> None:
-        """Read and forward llama.cpp server output from a pseudo-terminal (PTY).
-
-        Used in Jupyter/Colab environments to preserve TTY semantics required for
-        dynamic progress bar rendering, which is disabled when stdout is a PIPE.
-        """
-        state = dict(buffer=b'', last_was_cr=False)
-        while True:
-            try:
-                chunk = os.read(self.pty_master_fd, 1)
-            except OSError:
-                break
-            if not chunk:
-                break
-            self.process_log_output_chunk(chunk, state, '')
 
 
     def stop(self) -> None:
