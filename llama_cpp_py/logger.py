@@ -6,7 +6,7 @@ from loguru import logger
 if 0 in logger._core.handlers:
     logger.remove(0)
     logger.add(
-        sys.stderr,
+        sink=sys.stderr,
         level='INFO',
         filter=lambda record: 'llama_server' in record['extra'],
     )
