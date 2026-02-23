@@ -59,7 +59,7 @@ class GithubReleaseManager:
             extract_dir=self.release_dir,
         )
         else:
-            debug_logger.info(f'Using cached release: {self.release_dir}')
+            debug_logger.info(f'Using cached llama.cpp release: {self.release_dir}')
 
 
     @staticmethod
