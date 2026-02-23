@@ -24,9 +24,13 @@ class IsolationDefaultHandlerFilter:
 
 
 if 0 in logger._core.handlers:
-    logger._core.handlers[0]._filter = IsolationDefaultHandlerFilter(
-        logger_extras=['llama_server', 'llama_debug']
-    )
+    if hasattr(logger._core.handlers[0]._filter, 'logger_extras'):
+        logger._core.handlers[0]._filter.logger_extras.append('llama_server')
+        logger._core.handlers[0]._filter.logger_extras.append('llama_debug')
+    else:
+        logger._core.handlers[0]._filter = IsolationDefaultHandlerFilter(
+            logger_extras=['llama_server', 'llama_debug']
+        )
 
 
 server_logger = logger.bind(llama_server=True)
