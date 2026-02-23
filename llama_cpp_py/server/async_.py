@@ -19,7 +19,8 @@ from llama_cpp_py.server.base import LlamaBaseServer
 
 
 class LlamaAsyncServer(LlamaBaseServer):
-    """Asynchronous implementation of llama.cpp server manager.
+    """
+    Asynchronous implementation of llama.cpp server manager.
     
         Args:
             llama_dir: Directory containing llama-server executable

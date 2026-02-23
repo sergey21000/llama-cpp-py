@@ -11,7 +11,8 @@ from llama_cpp_py.logger import debug_logger
 
 
 class GithubReleaseManager:
-    """Manages downloading and extracting GitHub releases for specific platforms.
+    """
+    Manages downloading and extracting GitHub releases for specific platforms.
     
     Handles automatic detection of system architecture, downloading appropriate
     release assets, and extracting them to a local directory with caching support.

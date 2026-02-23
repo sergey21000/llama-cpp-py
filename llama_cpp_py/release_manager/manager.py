@@ -9,7 +9,8 @@ from llama_cpp_py.release_manager.base import GithubReleaseManager
 
 
 class LlamaReleaseManager(GithubReleaseManager):
-    """Specialized release manager for llama.cpp binaries.
+    """
+    Specialized release manager for llama.cpp binaries.
     
     Handles automatic setup of llama-server binaries with platform-specific
     optimizations and environment configuration.

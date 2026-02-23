@@ -41,38 +41,16 @@ More examples in the Google Colab notebook <a href="https://colab.research.googl
 
 ### 1. Set up environment file for llama.cpp
 
-Creating an `lama.env` file with variables for llama.cpp server
+Creating an `llama.env` file with variables for llama.cpp server
 ```sh
 # download example env file
-wget https://github.com/sergey21000/llama-cpp-py/raw/main/lama.env
+wget https://github.com/sergey21000/llama-cpp-py/raw/main/llama.env
+
 # or create manually
-nano lama.env
+nano llama.env
 ```
 
-Example `lama.env` content:
-```env
-# llama.cpp server environment variables
-# See: https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md#usage
-
-# Model source
-LLAMA_ARG_MODEL_URL=https://huggingface.co/bartowski/Qwen_Qwen3-0.6B-GGUF/resolve/main/Qwen_Qwen3-0.6B-Q4_K_M.gguf
-
-# Alternative model options
-# LLAMA_ARG_MODEL=D:/models/Qwen_Qwen3-0.6B-Q4_K_M.gguf
-# LLAMA_ARG_HF_REPO=bartowski/Qwen_Qwen3-0.6B-GGUF
-# LLAMA_ARG_HF_FILE=Qwen_Qwen3-0.6B-Q4_K_M.gguf
-
-# Server configuration
-LLAMA_ARG_JINJA=1
-LLAMA_ARG_CTX_SIZE=4096
-LLAMA_ARG_NO_WEBUI=1
-LLAMA_ARG_N_PARALLEL=1
-LLAMA_ARG_N_GPU_LAYERS=-1
-
-# Network endpoint
-LLAMA_ARG_PORT=8080
-LLAMA_ARG_HOST=127.0.0.1
-```
+See example [`llama.env`](https://github.com/sergey21000/llama-cpp-py/raw/main/llama.env)
 
 
 ### 2. Launch the server and send requests
@@ -86,7 +64,7 @@ from llama_cpp_py import LlamaSyncServer
 
 
 # environment variables for llama.cpp
-load_dotenv(dotenv_path='lama.env')
+load_dotenv(dotenv_path='llama.env')
 
 # auto-download last release and start server
 # set verbose=True to display server logs
@@ -118,7 +96,7 @@ from llama_cpp_py import LlamaAsyncServer, LlamaReleaseManager
 
 
 # environment variables for llama.cpp
-load_dotenv(dotenv_path='lama.env')
+load_dotenv(dotenv_path='llama.env')
 
 # a) download a release by a specific tag with the 'cuda' priority in the title
 # set tag='latest' to use the latest llama.cpp release version
@@ -227,10 +205,13 @@ LLAMACPP_RELEASE_ZIP_URL=https://github.com/ggml-org/llama.cpp/releases/download
 # (default: "")
 LLAMACPP_DIR="/content/llama.cpp/build/bin"
 
-# Logging level for llama-cpp-py (uses loguru).
+# Logging level for llama-cpp-py (uses loguru, default INFO).
 # A separate global setup via logger.add() also works.
 # (default: "")
 LLAMACPP_LOG_LEVEL=DEBUG
+
+# or set global loguru level
+LOGURU_LEVEL=WARNING
 ```
 
 

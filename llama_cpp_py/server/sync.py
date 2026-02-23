@@ -17,7 +17,8 @@ from llama_cpp_py.server.base import LlamaBaseServer
 
 
 class LlamaSyncServer(LlamaBaseServer):
-    """Synchronous implementation of llama.cpp server manager.
+    """
+    Synchronous implementation of llama.cpp server manager.
     
     Manages server process using subprocess.Popen with threaded output logging.
     Suitable for synchronous applications and scripts.

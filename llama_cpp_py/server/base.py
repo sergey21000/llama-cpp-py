@@ -10,7 +10,8 @@ from llama_cpp_py.release_manager.manager import LlamaReleaseManager
 
 
 class LlamaBaseServer:
-    """Base server class for managing llama.cpp server instances.
+    """
+    Base server class for managing llama.cpp server instances.
     
     Handles common configuration, process management, and health checking
     for both synchronous and asynchronous server implementations.
