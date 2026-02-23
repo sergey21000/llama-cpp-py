@@ -63,10 +63,15 @@ class LlamaBaseServer:
                 '3. .env file with load_dotenv()'
             )
         self.server_url = f'http://{self.host}:{self.port}'
-        self.openai_base_url = f'{self.server_url}/v1'
-        self.health_url  = f'{self.server_url}/health'
-        timeout_wait_for_server_ready = os.getenv('LLAMACPP_SERVER_TIMEOUT_WAIT') or 300
-        self.timeout_wait_for_server_ready = int(timeout_wait_for_server_ready)
+        if '0.0.0.0' in self.server_url:
+            server_url = self.server_url.replace('0.0.0.0', '127.0.0.1')
+        else:
+            server_url = f'{self.server_url}/health'
+        self.health_url = f'{server_url}/health'
+        self.openai_base_url = f'{server_url}/v1'
+        self.timeout_wait_for_server_ready = int(
+            os.getenv('LLAMACPP_SERVER_TIMEOUT_WAIT') or 300
+        )
         self.timeout_to_stop_process = 3
         llama_dir = llama_dir or os.getenv('LLAMACPP_DIR')
         if not llama_dir:
