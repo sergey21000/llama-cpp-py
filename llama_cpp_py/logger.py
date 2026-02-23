@@ -38,10 +38,12 @@ server_logger.add(
     sink=sys.stderr,
     level=log_level,
     filter=lambda record: 'llama_server' in record['extra'],
+    colorize=True,
 )
 
 debug_logger.add(
     sink=sys.stderr,
     level=log_level,
     filter=lambda record: 'llama_debug' in record['extra'],
+    colorize=True,
 )
