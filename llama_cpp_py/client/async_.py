@@ -103,7 +103,7 @@ class LlamaAsyncClient(LlamaBaseClient):
         url = f'{self.openai_base_url}/props'
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=self.timeout) as response:
+                async with session.get(url) as response:
                     return await response.json()
         except aiohttp.ClientError as e:
             debug_logger.debug(f'Failed to fetch server properties: {e}')
