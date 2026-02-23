@@ -100,7 +100,15 @@ class LlamaSyncClient(LlamaBaseClient):
             debug_logger.debug(f'Failed to fetch server properties: {e}')
         except json.JSONDecodeError as e:
             debug_logger.debug(f'Invalid JSON response from /props endpoint: {e}')
-        
+
+
+    def check_multimodal_support(self, modality: str = 'vision') -> bool:
+        """Checking server multimodality support"""
+        props = self.get_props()
+        if props:
+            return props.get('modalities', {}).get(modality, False)
+        return False
+
         
     def _stream_chat_completion_tokens(
         self,

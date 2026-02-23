@@ -111,6 +111,14 @@ class LlamaAsyncClient(LlamaBaseClient):
             debug_logger.debug(f'Request timeout while fetching server properties: {e}')
 
 
+    async def check_multimodal_support(self, modality: str = 'vision') -> bool:
+        """Checking server multimodality support"""
+        props = await self.get_props()
+        if props:
+            return props.get('modalities', {}).get(modality, False)
+        return False
+        
+
     async def _astream_chat_completion_tokens(
         self,
         user_message_or_messages: str,
