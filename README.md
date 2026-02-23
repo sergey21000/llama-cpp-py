@@ -41,16 +41,16 @@ More examples in the Google Colab notebook <a href="https://colab.research.googl
 
 ### 1. Set up environment file for llama.cpp
 
-Creating an `llama.env` file with variables for llama.cpp server
+Creating an `.llama.env` file with variables for llama.cpp server
 ```sh
 # download example env file
-wget https://github.com/sergey21000/llama-cpp-py/raw/main/llama.env
+wget https://github.com/sergey21000/llama-cpp-py/raw/main/.llama.env
 
 # or create manually
-nano llama.env
+nano .llama.env
 ```
 
-See example [`llama.env`](https://github.com/sergey21000/llama-cpp-py/raw/main/llama.env)
+See example [`.llama.env`](https://github.com/sergey21000/llama-cpp-py/raw/main/llama.env)
 
 
 ### 2. Launch the server and send requests
@@ -64,7 +64,7 @@ from llama_cpp_py import LlamaSyncServer
 
 
 # environment variables for llama.cpp
-load_dotenv(dotenv_path='llama.env')
+load_dotenv(dotenv_path='.llama.env')
 
 # auto-download last release and start server
 # set verbose=True to display server logs
@@ -96,7 +96,7 @@ from llama_cpp_py import LlamaAsyncServer, LlamaReleaseManager
 
 
 # environment variables for llama.cpp
-load_dotenv(dotenv_path='llama.env')
+load_dotenv(dotenv_path='.llama.env')
 
 # a) download a release by a specific tag with the 'cuda' priority in the title
 # set tag='latest' to use the latest llama.cpp release version
@@ -218,7 +218,7 @@ LOGURU_LEVEL=WARNING
 ## Troubleshooting
 
 If the server fails to start or behaves unexpectedly, check the following:
-- Check that the model path or URL in `llama.env` is correct
+- Check that the model path or URL in `.llama.env` is correct
 - Verify that the port is not already in use
 - Try setting `verbose=True` to see server logs
 ```python
