@@ -57,15 +57,13 @@ class LlamaBaseClient:
         if not image_path_or_base64:
             messages.append(dict(role='user', content=user_message_or_messages))
             return messages
-        image_base64 = cls._prepare_image(
-            image=image_path_or_base64,
+        image_message = cls._create_completion_message_from_image(
+            text=user_message_or_messages,
+            image_path_or_base64=image_path_or_base64,
             resize_size=resize_size,
         )
-        if image_base64:
-            messages.append(dict(role='user', content=[
-                dict(type='image_url', image_url=dict(url=f'data:image/png;base64,{image_base64}')),
-                dict(type='text', text=user_message_or_messages),
-            ]))
+        if image_message:
+            messages.append(image_message)
         return messages
 
 
@@ -104,6 +102,25 @@ class LlamaBaseClient:
                     f'Image format {image_path.suffix} is not supported. ' 
                     f'Expected one of: {cls.image_extension}'
                 )
+
+
+    @classmethod
+    def _create_completion_message_from_image(
+        cls,
+        image_path_or_base64: str | Path,
+        resize_size: int | None,
+        text: str = '',
+    ) -> dict:
+        image_base64 = cls._prepare_image(
+            image=image_path_or_base64,
+            resize_size=resize_size,
+        )
+        if image_base64:
+            message = dict(role='user', content=[
+                dict(type='image_url', image_url=dict(url=f'data:image/png;base64,{image_base64}')),
+                dict(type='text', text=text),
+            ])
+            return message
 
 
     @classmethod

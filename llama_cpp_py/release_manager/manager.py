@@ -20,7 +20,7 @@ class LlamaReleaseManager(GithubReleaseManager):
         tag: str = 'latest',
         release_zip_url: str = '',
         releases_dir: str | Path = '',
-        exclude_patterns: list[str] | None = ['vulkan', 'cudart'],
+        exclude_patterns: list[str] | None = ['vulkan', 'cudart', 'rocm'],
         priority_patterns: list[str] | None = ['cpu', 'cuda'],
     ):
         """Initialize llama.cpp release manager.
