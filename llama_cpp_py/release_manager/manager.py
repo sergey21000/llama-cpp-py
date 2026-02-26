@@ -11,10 +11,11 @@ from llama_cpp_py.release_manager.base import GithubReleaseManager
 class LlamaReleaseManager(GithubReleaseManager):
     """
     Specialized release manager for llama.cpp binaries.
-    
+
     Handles automatic setup of llama-server binaries with platform-specific
     optimizations and environment configuration.
     """
+
     def __init__(
         self,
         tag: str = 'latest',
@@ -24,7 +25,7 @@ class LlamaReleaseManager(GithubReleaseManager):
         priority_patterns: list[str] | None = ['cpu', 'cuda'],
     ):
         """Initialize llama.cpp release manager.
-        
+
         Args:
             tag: Release tag name or 'latest' for the most recent release
                 (env: LLAMACPP_RELEASE_TAG)
@@ -61,7 +62,6 @@ class LlamaReleaseManager(GithubReleaseManager):
                 if 'llama-cpp-py/releases' not in p
             )
 
-
     def ensure_release_dir(self, release_dir: Path, tag: str) -> None:
         """Ensure the release directory contains valid llama-server binaries."""
         if self.validate_release_dir(release_dir):
@@ -77,7 +77,6 @@ class LlamaReleaseManager(GithubReleaseManager):
             return
         raise ValueError(f'llama-server not found in {release_dir} or {bin_dir}')
 
-
     def validate_release_dir(self, release_dir: Path) -> None:
         """Validate that release directory contains llama-server executable."""
         if not release_dir.exists():
@@ -87,11 +86,9 @@ class LlamaReleaseManager(GithubReleaseManager):
             return False
         return True
             
-            
     @staticmethod
     def validate_release_zip_url(release_zip_url: str):
         """Validate llama.cpp specific release zip URL format."""
         GithubReleaseManager.validate_release_zip_url(release_zip_url)
         if 'https://github.com/ggml-org/llama.cpp/releases/download' not in release_zip_url:
             raise ValueError('The zip download link must include https://github.com/ggml-org/llama.cpp')
-

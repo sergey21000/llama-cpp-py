@@ -21,7 +21,7 @@ from llama_cpp_py.server.base import LlamaBaseServer
 class LlamaAsyncServer(LlamaBaseServer):
     """
     Asynchronous implementation of llama.cpp server manager.
-    
+
         Args:
             llama_dir: Directory containing llama-server executable
                 (env: LLAMACPP_DIR)
@@ -34,6 +34,7 @@ class LlamaAsyncServer(LlamaBaseServer):
             **subprocess_kwargs: Additional arguments for subprocess.Popen 
                 https://docs.python.org/3/library/subprocess.html#popen-constructor
     """
+
     def __init__(
         self,
         llama_dir: str | Path = '',
@@ -43,7 +44,7 @@ class LlamaAsyncServer(LlamaBaseServer):
         **subprocess_kwargs,
     ):
         """Initialize llama server instance.
-        
+
         Args:
             llama_dir: Directory containing llama-server executable
             host: Server host address (default: 127.0.0.1)
@@ -55,7 +56,6 @@ class LlamaAsyncServer(LlamaBaseServer):
             **subprocess_kwargs: Additional arguments for 
                 asyncio.create_subprocess_exec
                 https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.subprocess_exec
-                
         """
         super().__init__(
             llama_dir=llama_dir,
@@ -64,7 +64,6 @@ class LlamaAsyncServer(LlamaBaseServer):
             wait_for_ready=wait_for_ready,
             **subprocess_kwargs,
         )
-
 
     async def start(self) -> bool:
         """Start the llama.cpp server asynchronously."""
@@ -114,7 +113,6 @@ class LlamaAsyncServer(LlamaBaseServer):
             await self.stop()
             raise
 
-
     async def stop(self) -> bool:
         """Stop the llama.cpp server asynchronously with proper cleanup."""
         if not self.process:
@@ -134,7 +132,6 @@ class LlamaAsyncServer(LlamaBaseServer):
             debug_logger.info('Process already terminated, nothing to stop')
         self.process = None
         server_logger.info('llama.cpp server stopped')
-
 
     async def wait_for_server_ready(self, url: str, timeout: int | float) -> bool:
         """Wait asynchronously for server to become ready and respond to health checks."""
@@ -163,12 +160,10 @@ class LlamaAsyncServer(LlamaBaseServer):
         server_logger.warning(f'Server did not become ready within {timeout}s')
         return False
 
-
     async def __aenter__(self):
         """Start the server when entering an async context manager."""
         await self.start()
         return self
-
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Stop the server when exiting an async context manager."""

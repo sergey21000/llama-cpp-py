@@ -19,10 +19,11 @@ from llama_cpp_py.server.base import LlamaBaseServer
 class LlamaSyncServer(LlamaBaseServer):
     """
     Synchronous implementation of llama.cpp server manager.
-    
+
     Manages server process using subprocess.Popen with threaded output logging.
     Suitable for synchronous applications and scripts.
     """
+
     def __init__(
         self,
         llama_dir: str | Path = '',
@@ -32,7 +33,7 @@ class LlamaSyncServer(LlamaBaseServer):
         **subprocess_kwargs,
     ):
         """Initialize llama server instance.
-        
+
         Args:
             llama_dir: Directory containing llama-server executable
                 (env: LLAMACPP_DIR)
@@ -42,7 +43,7 @@ class LlamaSyncServer(LlamaBaseServer):
             verbose: Enable verbose logging of server output
             wait_for_ready: If True, waits for server health check before start() completes;
                            if False, returns immediately after process launch
-            **subprocess_kwargs: Additional arguments for subprocess.Popen 
+            **subprocess_kwargs: Additional arguments for subprocess.Popen
                 https://docs.python.org/3/library/subprocess.html#popen-constructor
         """
         super().__init__(
@@ -52,7 +53,6 @@ class LlamaSyncServer(LlamaBaseServer):
             wait_for_ready=wait_for_ready,
             **subprocess_kwargs,
         )
-
 
     def start(self) -> None:
         """Start the llama.cpp server synchronously."""
@@ -105,7 +105,6 @@ class LlamaSyncServer(LlamaBaseServer):
             self.stop()
             raise
 
-
     def stop(self) -> None:
         """Stop the llama.cpp server gracefully with fallback to force kill."""
         if not self.process:
@@ -122,7 +121,6 @@ class LlamaSyncServer(LlamaBaseServer):
             debug_logger.info('Process already terminated, nothing to stop')
         self.process = None
         server_logger.info('llama.cpp server stopped')
-
 
     def wait_for_server_ready(self, url: str, timeout: int | float) -> bool:
         """Wait synchronously for server to become ready and respond to health checks."""
@@ -143,19 +141,17 @@ class LlamaSyncServer(LlamaBaseServer):
                         server_logger.info('Model is loading (503), waiting...')
                     start_time = time.monotonic()
                 else:
-                   debug_logger.debug(f'Unexpected status code {response.status_code}, retrying...')
+                    debug_logger.debug(f'Unexpected status code {response.status_code}, retrying...')
             except requests.RequestException as e:
                 debug_logger.debug(f'Connection error: {e}, retrying...')
             time.sleep(1)
         server_logger.warning(f'Server did not become ready within {timeout}s')
         return False
 
-
     def __enter__(self):
         """Start the server when entering a context manager."""
         self.start()
         return self
-
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Stop the server when exiting a context manager."""

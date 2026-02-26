@@ -13,6 +13,7 @@ class IsolationDefaultHandlerFilter:
         logger_extras: A list of extra values for loggers that should 
                        not be logged by the default auto-initialized handler
     """
+    
     def __init__(self, logger_extras: list[str]):
         self.logger_extras = logger_extras
 

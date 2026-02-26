@@ -14,7 +14,6 @@ from llama_cpp_py.client.base import LlamaBaseClient
 class LlamaAsyncClient(LlamaBaseClient):
     """
     Asynchronous client for a llama.cpp server exposing an OpenAI-compatible API.
-    
     Supports streaming chat completions and optional thinking-mode control.
     """
     
@@ -26,7 +25,7 @@ class LlamaAsyncClient(LlamaBaseClient):
     ):
         """
         Initialize an asynchronous client for a llama.cpp server.
-        
+
         Args:
             openai_base_url: Base URL of the OpenAI-compatible API endpoint.
                 Must include the version prefix (e.g., 'http://localhost:8080/v1').
@@ -46,28 +45,25 @@ class LlamaAsyncClient(LlamaBaseClient):
         """Check llama.cpp server health status asynchronously."""
         return await self._get_request('/health')
 
-
     async def get_models(self) -> dict[str, Any] | None:
         """Get list of available models asynchronously."""
         return await self._get_request('/models')
-
 
     async def get_props(self) -> dict[str, Any] | None:
         """Retrieve server global properties from Llama.cpp server asynchronously."""
         return await self._get_request('/props')
 
-
     async def _get_request(self, path: str) -> dict[str, Any] | None:
         """
         Make an asynchronous GET request to the specified API endpoint.
-        
+
         Args:
             path: API endpoint path (e.g., '/health', '/models')
-            
+
         Returns:
             Response JSON as dict on success, None on failure.
             Failures are logged via debug_logger.
-            
+
         Note:
             Uses a new aiohttp session for each request. If you make many requests,
             consider sharing a session for better performance.
@@ -85,14 +81,12 @@ class LlamaAsyncClient(LlamaBaseClient):
         except asyncio.TimeoutError as e:
             debug_logger.debug(f'Request timeout for `{url}`: {e}')
 
-
     async def check_multimodal_support(self, modality: str = 'vision') -> bool:
         """Checking server multimodality support"""
         props = await self.get_props()
         if props:
             return props.get('modalities', {}).get(modality, False)
         return False
-        
 
     async def _astream_chat_completion_tokens(
         self,
@@ -101,20 +95,20 @@ class LlamaAsyncClient(LlamaBaseClient):
     ) -> AsyncIterator[str]:
         """
         Stream tokens from OpenAI Chat Completions API.
-        
+
         Internal method that handles streaming from the legacy/completions API endpoint.
         Creates a streaming request and yields individual content tokens as they arrive.
-        
+
         Args:
             messages: List of message dictionaries in OpenAI format
                     (e.g., [{"role": "user", "content": "Hello"}])
             completions_kwargs: Additional parameters for the completions API
                               (temperature, max_tokens, top_p, etc.)
-        
+
         Yields:
             Individual content tokens as strings from the streaming response.
             Empty tokens are filtered out automatically.
-            
+
         Note:
             This method is designed for internal use by the public stream() method.
             Uses the chat.completions.create endpoint with stream=True.
@@ -130,7 +124,6 @@ class LlamaAsyncClient(LlamaBaseClient):
             if token:
                 yield token
 
-
     async def _astream_responses_tokens(
         self,
         input: str | list[dict],
@@ -138,20 +131,20 @@ class LlamaAsyncClient(LlamaBaseClient):
     ) -> AsyncIterator[str]:
         """
         Stream tokens from OpenAI Responses API.
-        
+
         Internal method that handles streaming from the newer responses API endpoint.
         Processes the response chunks and extracts delta content for token streaming.
-        
+
         Args:
             input: Either a string (simple prompt) or a list of message dictionaries
                   (formatted conversation history)
             responses_kwargs: Additional parameters for the responses API
                             (temperature, max_output_tokens, instructions, etc.)
-        
+
         Yields:
             Individual content tokens as strings from the streaming response.
             Automatically filters out empty tokens.
-            
+
         Note:
             This method is designed for internal use by the public stream() method.
             Uses the responses.create endpoint with stream=True.
@@ -167,7 +160,6 @@ class LlamaAsyncClient(LlamaBaseClient):
             token = getattr(chunk, 'delta', '')
             if token:
                 yield token
-
 
     async def astream(
         self,
@@ -188,52 +180,52 @@ class LlamaAsyncClient(LlamaBaseClient):
         High-level generator that provides a unified streaming interface for both
         Chat Completions and Responses APIs. Handles message preparation, thinking
         tag processing, and token accumulation with flexible output options.
-        
+
         Args:
             user_message_or_messages: 
                 User input - either a string message or pre-formatted message list.
                 When using Responses API with string input, it's treated as a simple prompt.
-            
+
             system_prompt: 
                 System instructions to set model behavior and context.
                 Ignored if user_message_or_messages contains system messages.
-            
+
             image_path_or_base64: 
                 Optional image for multimodal queries. Accepts file path or base64 string.
                 When provided, automatically formats messages for vision capabilities.
-            
+
             resize_size: 
                 Maximum image dimension in pixels (default 512). Images are resized
                 maintaining aspect ratio to optimize token usage while preserving detail.
-            
+
             show_thinking: 
                 Control visibility of  tags content. If True, includes thinking
                 content in output. If False, filters out thinking sections and shows
                 placeholder instead.
-            
+
             return_per_token: 
                 Streaming granularity. If True, yields individual tokens as they arrive.
                 If False, accumulates tokens and yields complete sentences/text blocks.
-            
+
             out_token_in_thinking_mode: 
                 Placeholder text shown when thinking content is hidden (show_thinking=False).
                 Set to None to show nothing during thinking. Default shows "Thinking ...".
-            
+
             use_responses_api: 
                 API selection flag. If True, uses the newer Responses API endpoint.
                 If False, uses the legacy Chat Completions API. Affects which kwargs
                 dictionary should be provided.
-            
+
             completions_kwargs: 
                 Additional parameters for Chat Completions API when use_responses_api=False.
                 Common options: temperature, max_tokens, top_p, presence_penalty.
                 Must be empty when using Responses API.
-            
+
             responses_kwargs: 
                 Additional parameters for Responses API when use_responses_api=True.
                 Common options: temperature, max_output_tokens, instructions, metadata.
                 Must be empty when using Completions API.
-        
+
         Yields:
             Processed text chunks based on configuration. When return_per_token=True,
             yields individual tokens. When return_per_token=False, yields accumulated
@@ -262,8 +254,9 @@ class LlamaAsyncClient(LlamaBaseClient):
                 'Messages list is empty. Request will not be sent to the server.'
             )
             return
+        method = 'responses' if use_responses_api else 'completions'
         debug_logger.debug(
-            f'Messages before openai create:\n{pprint.pformat(messages)}'
+            f'Messages before {method} create:\n{pprint.pformat(messages)}'
         )
         if use_responses_api:
             generator = self._astream_responses_tokens(

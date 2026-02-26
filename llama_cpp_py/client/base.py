@@ -12,9 +12,10 @@ class LlamaBaseClient:
     """
     Base client for interacting with LLM models, providing common preprocessing
     and postprocessing utilities for text generation.
-    
+
     Handles thinking tags removal
     """
+
     opening_thinking_tags = ['<think>', '&lt;think&gt;']
     closing_thinking_tags = ['</think>', '&lt;/think&gt;']
     all_thinking_tags = [*opening_thinking_tags, *closing_thinking_tags]
@@ -32,21 +33,21 @@ class LlamaBaseClient:
     ) -> list[dict]:
         """
         Prepare messages for multimodal LLM input with optional image support.
-        
+
         Formats user text, system prompt, and optional image into the OpenAI
         chat completion message format. Supports both text-only and image-text
         multimodal inputs.
-        
+
         Args:
             user_message_or_messages: User text input or pre-formatted message list.
             system_prompt: System instructions for the model.
             image_path_or_base64: Path to image file or base64 encoded string.
             resize_size: Maximum dimension for image resizing (maintains aspect ratio).
             support_system_role: Whether to include system role in messages.
-            
+
         Returns:
             List of message dictionaries in OpenAI format, with image data as base64.
-            
+
         Note:
             Images are resized to reduce token usage and converted to base64 PNG.
         """
@@ -68,23 +69,22 @@ class LlamaBaseClient:
             messages.append(image_message)
         return messages
 
-
     @classmethod
     def _prepare_image(cls, image: str | Path, resize_size: int | None) -> str | None:
         """
         Prepare image for LLM input by resizing and converting to base64.
-        
+
         Supports image file paths (PNG, JPG, JPEG) or already base64 encoded strings.
         Images are converted to RGB, resized maintaining aspect ratio, and encoded
         as base64 PNG for consistent format.
-        
+
         Args:
             image: Path to image file or base64 encoded image string.
             resize_size: Maximum width/height for resizing (smaller dimension preserved).
-            
+
         Returns:
             Base64 encoded PNG image string.
-            
+
         Raises:
             FileNotFoundError: If image path doesn't exist.
             ValueError: If image format is unsupported.
@@ -109,7 +109,6 @@ class LlamaBaseClient:
                 f'Image must be a string or path, got: {type(image)}' 
             )
 
-
     @classmethod
     def _create_message_from_image(
         cls,
@@ -120,20 +119,20 @@ class LlamaBaseClient:
     ) -> dict:
         """
         Create a formatted message dictionary for multimodal requests.
-        
+
         Prepares an image and text combination in the format expected by either
         the Responses API or Chat Completions API.
-        
+
         Args:
             image_path_or_base64: Path to image file or base64 string
             resize_size: Optional maximum dimension for image resizing
             use_responses_api: Determines which API format to use
             text: Optional accompanying text message
-            
+
         Returns:
             Dictionary with 'role' and 'content' fields formatted for the
             specified API (Responses or Completions).
-            
+
         Note:
             Returns None if image preparation fails (handled by _prepare_image)
         """
@@ -154,7 +153,6 @@ class LlamaBaseClient:
                 ])
             return message
     
-
     @classmethod
     def _process_output_token(
         cls,
@@ -166,11 +164,11 @@ class LlamaBaseClient:
     ):
         """
         Process individual LLM output token with thinking mode and accumulation control.
-        
+
         Handles special thinking tags (<think>...</think>) and provides flexible
         output modes: per-token streaming or accumulated text, with or without
         thinking content.
-        
+
         Args:
             token: Single token from LLM stream output.
             state: Mutable state dictionary containing:
@@ -179,10 +177,10 @@ class LlamaBaseClient:
             show_thinking: If True, output thinking tags content; if False, replace or skip.
             return_per_token: If True, yield individual tokens; if False, accumulate and return full text.
             out_token_in_thinking_mode: Replacement token for thinking content when show_thinking=False.
-            
+
         Returns:
             Processed token or accumulated text, or None if token should be skipped.
-            
+
         Note:
             Thinking mode tokens are only filtered when show_thinking=False and
             out_token_in_thinking_mode is provided as a placeholder.

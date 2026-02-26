@@ -14,6 +14,7 @@ class LlamaBaseServer:
     Handles common configuration, process management, and health checking
     for both synchronous and asynchronous server implementations.
     """
+
     def __init__(
         self,
         llama_dir: str | Path = '',
@@ -23,7 +24,7 @@ class LlamaBaseServer:
         **subprocess_kwargs,
     ):
         """Initialize the base llama.cpp server instance.
-        
+
         Args:
             llama_dir: Directory containing llama-server executable. If not provided,
                      uses the release manager's directory.
@@ -36,11 +37,11 @@ class LlamaBaseServer:
             **subprocess_kwargs: Additional arguments passed to subprocess.Popen/
                                create_subprocess_exec. Use 'env' key to provide
                                custom environment variables.
-        
+
         Raises:
             ValueError: If LLAMA_ARG_HOST or LLAMA_ARG_PORT environment variables 
                        are not set in either os.environ or subprocess_kwargs['env']
-        
+
         Note:
             Environment variables are read from subprocess_kwargs['env'] if provided,
             otherwise from os.environ. The following variables are required:
@@ -85,7 +86,6 @@ class LlamaBaseServer:
         self.subprocess_kwargs = subprocess_kwargs
         debug_logger.debug(f'LlamaBaseServer init, server_url: {self.server_url}')
 
-
     @staticmethod
     def is_jupyter_runtime():
         """Checking that the runtime environment is Jupyter or Colab"""
@@ -94,7 +94,6 @@ class LlamaBaseServer:
             'ipykernel' in sys.modules or
             'jupyter' in sys.modules
         )
-
 
     def log_output_pty(self) -> None:
         """Read and forward llama.cpp server output from a pseudo-terminal (PTY).
@@ -116,14 +115,13 @@ class LlamaBaseServer:
                 log_prefix='',
             )
 
-
     @staticmethod
     def process_log_output_chunk(chunk: bytes, state: dict, log_prefix: str) -> None:
         """Process a single byte chunk from server output stream.
-        
+
         Handles carriage returns for dynamic progress updates and newlines for regular output.
         Updates the parsing state dictionary in-place.
-        
+
         Args:
             chunk: Single byte to process from the output stream
             state: Dictionary containing parsing state with keys:
