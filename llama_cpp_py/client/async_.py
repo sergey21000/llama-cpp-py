@@ -18,7 +18,12 @@ class LlamaAsyncClient(LlamaBaseClient):
     Supports streaming chat completions and optional thinking-mode control.
     """
     
-    def __init__(self, openai_base_url: str, api_key: str = '-'):
+    def __init__(
+        self,
+        openai_base_url: str,
+        api_key: str = '-',
+        model: str = '-',
+    ):
         """
         Initialize an asynchronous client for a llama.cpp server.
         
@@ -35,7 +40,7 @@ class LlamaAsyncClient(LlamaBaseClient):
             base_url=openai_base_url,
             api_key=api_key,
         )
-
+        self.model = model
 
     async def check_health(self) -> dict[str, Any] | None:
         """Check llama.cpp server health status asynchronously."""
@@ -166,7 +171,7 @@ class LlamaAsyncClient(LlamaBaseClient):
 
     async def astream(
         self,
-        user_message_or_messages: str,
+        user_message_or_messages: str | list[dict],
         system_prompt: str = '',
         image_path_or_base64: str | Path = '',
         resize_size: int | None = None,
@@ -258,15 +263,15 @@ class LlamaAsyncClient(LlamaBaseClient):
             )
             return
         debug_logger.debug(
-            f'Messages before openai chat.completions.create:\n{pprint.pformat(messages)}'
+            f'Messages before openai create:\n{pprint.pformat(messages)}'
         )
         if use_responses_api:
-            generator = self._stream_responses_tokens(
+            generator = self._astream_responses_tokens(
                 input=messages,
                 responses_kwargs=responses_kwargs,
             )
         else:
-            generator = self._stream_chat_completion_tokens(
+            generator = self._astream_chat_completion_tokens(
                 messages=messages,
                 completions_kwargs=completions_kwargs,
             )

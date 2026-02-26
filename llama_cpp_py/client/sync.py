@@ -165,7 +165,7 @@ class LlamaSyncClient(LlamaBaseClient):
 
     def stream(
         self,
-        user_message_or_messages: str,
+        user_message_or_messages: str | list[dict],
         system_prompt: str = '',
         image_path_or_base64: str | Path = '',
         resize_size: int | None = None,
@@ -257,7 +257,7 @@ class LlamaSyncClient(LlamaBaseClient):
             )
             return
         debug_logger.debug(
-            f'Messages before openai chat.completions.create:\n{pprint.pformat(messages)}'
+            f'Messages before openai create:\n{pprint.pformat(messages)}'
         )
         if use_responses_api:
             generator = self._stream_responses_tokens(
