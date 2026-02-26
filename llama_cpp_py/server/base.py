@@ -1,8 +1,6 @@
 import os
-import io
 import sys
 import platform
-import logging
 from pathlib import Path
 
 from llama_cpp_py.logger import debug_logger

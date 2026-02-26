@@ -1,4 +1,3 @@
-import re
 import io
 import base64
 from pathlib import Path
@@ -27,6 +26,7 @@ class LlamaBaseClient:
         system_prompt: str,
         image_path_or_base64: str | Path,
         resize_size: int | None,
+        use_responses_api: bool,
         support_system_role: bool = True,
     ) -> list[dict]:
         """
@@ -57,10 +57,11 @@ class LlamaBaseClient:
         if not image_path_or_base64:
             messages.append(dict(role='user', content=user_message_or_messages))
             return messages
-        image_message = cls._create_completion_message_from_image(
+        image_message = cls._create_message_from_image(
             text=user_message_or_messages,
             image_path_or_base64=image_path_or_base64,
             resize_size=resize_size,
+            use_responses_api=use_responses_api,
         )
         if image_message:
             messages.append(image_message)
@@ -102,26 +103,56 @@ class LlamaBaseClient:
                     f'Image format {image_path.suffix} is not supported. ' 
                     f'Expected one of: {cls.image_extension}'
                 )
+        else:
+            debug_logger.warning(
+                f'Image must be a string or path, got: {type(image)}' 
+            )
 
 
     @classmethod
-    def _create_completion_message_from_image(
+    def _create_message_from_image(
         cls,
         image_path_or_base64: str | Path,
         resize_size: int | None,
+        use_responses_api: bool,
         text: str = '',
     ) -> dict:
+        """
+        Create a formatted message dictionary for multimodal requests.
+        
+        Prepares an image and text combination in the format expected by either
+        the Responses API or Chat Completions API.
+        
+        Args:
+            image_path_or_base64: Path to image file or base64 string
+            resize_size: Optional maximum dimension for image resizing
+            use_responses_api: Determines which API format to use
+            text: Optional accompanying text message
+            
+        Returns:
+            Dictionary with 'role' and 'content' fields formatted for the
+            specified API (Responses or Completions).
+            
+        Note:
+            Returns None if image preparation fails (handled by _prepare_image)
+        """
         image_base64 = cls._prepare_image(
             image=image_path_or_base64,
             resize_size=resize_size,
         )
         if image_base64:
-            message = dict(role='user', content=[
-                dict(type='image_url', image_url=dict(url=f'data:image/png;base64,{image_base64}')),
-                dict(type='text', text=text),
-            ])
+            if use_responses_api:
+                message = dict(role='user', content=[
+                    dict(type='input_image', image_url=f'data:image/png;base64,{image_base64}'),
+                    dict(type='input_text', text=text),
+                ])
+            else:
+                message = dict(role='user', content=[
+                    dict(type='image_url', image_url=dict(url=f'data:image/png;base64,{image_base64}')),
+                    dict(type='text', text=text),
+                ])
             return message
-
+    
 
     @classmethod
     def _process_output_token(

@@ -56,6 +56,9 @@ class LlamaSyncServer(LlamaBaseServer):
 
     def start(self) -> None:
         """Start the llama.cpp server synchronously."""
+        if self.process:
+            server_logger.info('llama.cpp server is already running, use .stop() to stop')
+            return
         server_logger.info('llama.cpp server starting ...')
         if not self.verbose:
             self.process = subprocess.Popen(
