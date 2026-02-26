@@ -6,7 +6,7 @@ from typing import Iterator, Any
 import requests
 from openai import OpenAI
 
-from llama_cpp_py.logger import debug_logger, server_logger
+from llama_cpp_py.logger import debug_logger
 from llama_cpp_py.client.base import LlamaBaseClient
 
 

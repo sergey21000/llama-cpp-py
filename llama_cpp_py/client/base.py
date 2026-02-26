@@ -207,22 +207,3 @@ class LlamaBaseClient:
                 elif not return_per_token:
                     state['response_text'] += token
                     return state['response_text']
-
-
-    def clear_llama_all_env_vars() -> None:
-        """Remove all environment variables starting with LLAMA_ARG_"""
-        for key in list(os.environ.keys()):
-            if key.startswith('LLAMA_ARG_'):
-                del os.environ[key]
-
-
-    def clear_llama_model_env_vars() -> None:
-        """Remove LLAMA_ARG_ environment variables related to model configuration
-        
-        Clears variables for model path (MODEL), HuggingFace integration (HF),
-        and multimodal projections (MMPROJ).
-        """
-        model_prefixes = ('LLAMA_ARG_MODEL', 'LLAMA_ARG_HF', 'LLAMA_ARG_MMPROJ')
-        for key in list(os.environ.keys()):
-            if key.startswith(model_prefixes):
-                del os.environ[key]
