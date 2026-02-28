@@ -32,14 +32,7 @@ class LlamaAsyncClient(LlamaBaseClient):
             api_key: API key for authentication. For llama.cpp servers that do not
                 require authentication, a placeholder such as '-' can be used.
         """
-        if '0.0.0.0' in openai_base_url:
-            openai_base_url = openai_base_url.replace('0.0.0.0', '127.0.0.1')
-        self.openai_base_url = openai_base_url
-        self.client = AsyncOpenAI(
-            base_url=openai_base_url,
-            api_key=api_key,
-        )
-        self.model = model
+        super().__init__(openai_base_url, api_key, model, async_mode=True)
 
     async def check_health(self) -> dict[str, Any] | None:
         """Check llama.cpp server health status asynchronously."""
@@ -242,7 +235,7 @@ class LlamaAsyncClient(LlamaBaseClient):
                 'Skipping sending a request'
             )
             return
-        messages = self._prepare_messages(
+        messages = self.formatter.prepare_messages(
             user_message_or_messages=user_message_or_messages,
             system_prompt=system_prompt,
             image_path_or_base64=image_path_or_base64,
@@ -270,7 +263,7 @@ class LlamaAsyncClient(LlamaBaseClient):
             )
         state = dict(response_text='', is_in_thinking=False)
         async for token in generator:
-            token = self._process_output_token(
+            token = self.formatter.process_output_token(
                 token=token,
                 state=state,
                 show_thinking=show_thinking,

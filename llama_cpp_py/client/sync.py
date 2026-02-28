@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Iterator, Any
 
 import requests
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 
 from llama_cpp_py.logger import debug_logger
 from llama_cpp_py.client.base import LlamaBaseClient
@@ -31,14 +31,7 @@ class LlamaSyncClient(LlamaBaseClient):
             api_key: API key for authentication. For llama.cpp servers that do not
                 require authentication, a placeholder such as '-' can be used.
         """
-        if '0.0.0.0' in openai_base_url:
-            openai_base_url = openai_base_url.replace('0.0.0.0', '127.0.0.1')
-        self.openai_base_url = openai_base_url
-        self.client = OpenAI(
-            base_url=openai_base_url,
-            api_key=api_key,
-        )
-        self.model = model
+        super().__init__(openai_base_url, api_key, model, async_mode=False)
 
     def check_health(self) -> dict[str, Any] | None:
         """Check llama.cpp server health status."""
@@ -235,7 +228,7 @@ class LlamaSyncClient(LlamaBaseClient):
                 'Skipping sending a request'
             )
             return
-        messages = self._prepare_messages(
+        messages = self.formatter.prepare_messages(
             user_message_or_messages=user_message_or_messages,
             system_prompt=system_prompt,
             image_path_or_base64=image_path_or_base64,
@@ -263,7 +256,7 @@ class LlamaSyncClient(LlamaBaseClient):
             )
         state = dict(response_text='', is_in_thinking=False)
         for token in generator:
-            token = self._process_output_token(
+            token = self.formatter.process_output_token(
                 token=token,
                 state=state,
                 show_thinking=show_thinking,
