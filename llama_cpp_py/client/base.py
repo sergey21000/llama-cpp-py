@@ -27,12 +27,14 @@ class LlamaBaseClient:
         """
         if '0.0.0.0' in openai_base_url:
             openai_base_url = openai_base_url.replace('0.0.0.0', '127.0.0.1')
-        self.openai_base_url = openai_base_url
         client_class = AsyncOpenAI if async_mode else OpenAI
         self.client = client_class(
             base_url=openai_base_url,
             api_key=api_key,
         )
+        if not openai_base_url:
+            openai_base_url = str(self.client.base_url)[:-1]
         self.base_url = openai_base_url.replace('/v1', '')
+        self.openai_base_url = openai_base_url
         self.model = model
         self.formatter = LLMFormatter()

@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import AsyncIterator, Any
 
 import aiohttp
-from openai import AsyncOpenAI
 
 from llama_cpp_py.logger import debug_logger
 from llama_cpp_py.client.base import LlamaBaseClient
@@ -19,7 +18,7 @@ class LlamaAsyncClient(LlamaBaseClient):
     
     def __init__(
         self,
-        openai_base_url: str,
+        openai_base_url: str = '',
         api_key: str = '-',
         model: str = '-',
     ):
@@ -170,7 +169,7 @@ class LlamaAsyncClient(LlamaBaseClient):
         self,
         user_message_or_messages: str | list[dict],
         system_prompt: str = '',
-        image_path_or_base64: str | Path = '',
+        image_path: str | Path = '',
         resize_size: int | None = None,
         show_thinking: bool = True,
         return_per_token: bool = True,
@@ -195,8 +194,8 @@ class LlamaAsyncClient(LlamaBaseClient):
                 System instructions to set model behavior and context.
                 Ignored if user_message_or_messages contains system messages.
 
-            image_path_or_base64: 
-                Optional image for multimodal queries. Accepts file path or base64 string.
+            image_path: 
+                Optional image for multimodal queries.
                 When provided, automatically formats messages for vision capabilities.
 
             resize_size: 
@@ -250,7 +249,7 @@ class LlamaAsyncClient(LlamaBaseClient):
         messages = self.formatter.prepare_messages(
             user_message_or_messages=user_message_or_messages,
             system_prompt=system_prompt,
-            image_path_or_base64=image_path_or_base64,
+            image_path=image_path,
             resize_size=resize_size,
             use_responses_api=use_responses_api,
         )

@@ -28,7 +28,7 @@ class LLMFormatter:
         cls,
         user_message_or_messages: str | list[dict],
         system_prompt: str,
-        image_path_or_base64: str | Path,
+        image_path: str | Path,
         resize_size: int | None,
         use_responses_api: bool,
         support_system_role: bool = True,
@@ -43,7 +43,7 @@ class LLMFormatter:
         Args:
             user_message_or_messages: User text input or pre-formatted message list.
             system_prompt: System instructions for the model.
-            image_path_or_base64: Path to image file or base64 encoded string.
+            image_path: Path to image file.
             resize_size: Maximum dimension for image resizing (maintains aspect ratio).
             support_system_role: Whether to include system role in messages.
 
@@ -58,7 +58,7 @@ class LLMFormatter:
         messages = []
         if support_system_role and system_prompt:
             messages.append(dict(role='system', content=system_prompt))
-        if not image_path_or_base64:
+        if not image_path:
             text_message = cls._create_message_from_text(
                 text=user_message_or_messages,
                 use_responses_api=use_responses_api,
@@ -67,7 +67,7 @@ class LLMFormatter:
             return messages
         image_message = cls._create_message_from_image(
             text=user_message_or_messages,
-            image_path_or_base64=image_path_or_base64,
+            image_path=image_path,
             resize_size=resize_size,
             use_responses_api=use_responses_api,
         )
@@ -76,7 +76,11 @@ class LLMFormatter:
         return messages
 
     @classmethod
-    def _prepare_image_to_base64(cls, image: str | Path, resize_size: int | None) -> str | None:
+    def _prepare_image_to_base64(
+        cls,
+        image_path: str | Path,
+        resize_size: int | None
+    ) -> str | None:
         """
         Prepare image for LLM input by resizing and converting to base64.
 
@@ -95,8 +99,8 @@ class LLMFormatter:
             FileNotFoundError: If image path doesn't exist.
             ValueError: If image format is unsupported.
         """
-        if isinstance(image, (str, Path)):
-            image_path = Path(image)
+        if isinstance(image_path, (str, Path)):
+            image_path = Path(image_path)
             if image_path.suffix.lower() in cls.image_extension:
                 image_pil = Image.open(image_path).convert('RGB')
                 if resize_size:
@@ -123,6 +127,15 @@ class LLMFormatter:
         role: str = 'user',
     ) -> dict:
         """
+        Create a formatted message dictionary for text-only requests.
+        
+        Args:
+            text: User text input
+            use_responses_api: Determines which API format to use
+            role: Message role (user, assistant, system)
+            
+        Returns:
+            Dictionary with 'role' and 'content' fields formatted for the specified API
         """
         message_type = 'input_text' if use_responses_api else 'text'
         return dict(
@@ -131,37 +144,69 @@ class LLMFormatter:
         )
 
     @staticmethod
-    def create_message_content_from_text(
+    def _create_message_content_from_text(
         text: str,
         use_responses_api: bool,
     ) -> dict:
+        """
+        Create a content block for text within a multimodal message.
+        
+        Args:
+            text: Text content
+            use_responses_api: Determines which API format to use
+            
+        Returns:
+            Dictionary with text content formatted for the specified API
+        """
         if use_responses_api:
             content = dict(type='input_text', text=text)
         else:
-            content = dict(type='text', text=text),
+            content = dict(type='text', text=text)
         return content
 
-    @staticmethod
-    def create_message_content_from_image(
-        image_url: str,
+    @classmethod
+    def _create_message_content_from_image(
+        cls,
+        image_path: str,
+        resize_size: int,
         use_responses_api: bool,
-    ) -> dict:
-        if use_responses_api:
-            content = dict(type='input_image', image_url=image_url)
-        else:
-            content = dict(type='image_url', image_url=image_url)
-        return content
-
+    ) -> dict | None:
+        """
+        Create a content block for an image within a multimodal message.
+        
+        Args:
+            image_path: Path to image file
+            resize_size: Maximum dimension for image resizing
+            use_responses_api: Determines which API format to use
+            
+        Returns:
+            Dictionary with image content formatted for the specified API,
+            or None if image preparation fails
+        """
+        image_base64 = cls._prepare_image_to_base64(
+            image_path=image_path,
+            resize_size=resize_size,
+        )
+        if image_base64:
+            image_url = f'data:image/png;base64,{image_base64}'
+            if use_responses_api:
+                content = dict(type='input_image', image_url=image_url)
+            else:
+                content = dict(
+                    type='image_url',
+                    image_url=dict(url=image_url),
+            )
+            return content
 
     @classmethod
     def _create_message_from_image(
         cls,
-        image_path_or_base64: str | Path,
+        image_path: str | Path,
         resize_size: int | None,
         use_responses_api: bool,
         text: str = '',
         role: str = 'user',
-    ) -> dict:
+    ) -> dict | None:
         """
         Create a formatted message dictionary for multimodal requests.
 
@@ -169,7 +214,7 @@ class LLMFormatter:
         the Responses API or Chat Completions API.
 
         Args:
-            image_path_or_base64: Path to image file or base64 string
+            image_path: Path to image file
             resize_size: Optional maximum dimension for image resizing
             use_responses_api: Determines which API format to use
             text: Optional accompanying text message
@@ -181,19 +226,16 @@ class LLMFormatter:
         Note:
             Returns None if image preparation fails (handled by _prepare_image)
         """
-        image_base64 = cls._prepare_image_to_base64(
-            image=image_path_or_base64,
+        message = dict(role=role, content=[])
+        image_content = cls._create_message_content_from_image(
+            image_path=image_path,
             resize_size=resize_size,
+            use_responses_api=use_responses_api,
         )
-        if image_base64:
-            message = dict(role=role, content=[])
-            image_content = cls.create_message_content_from_image(
-                image_url=f'data:image/png;base64,{image_base64}',
-                use_responses_api=use_responses_api,
-            )
+        if image_content:
             message['content'].append(image_content)
             if text:
-                text_content = cls.create_message_content_from_text(
+                text_content = cls._create_message_content_from_text(
                     text=text,
                     use_responses_api=use_responses_api,
                 )
@@ -261,13 +303,32 @@ class LLMFormatter:
         support_system_role: bool,
         history_len: int,
         user_message: str,
-        image_path_or_base64: str | Path,
+        image_path: str | Path,
         resize_size: int | None,
         chatbot: GRADIO_CHAT_HISTORY,
         convert_to_openai_format: bool = True,
-        use_responses_api: bool = True,
+        use_responses_api: bool = False,
     ) -> list[dict]:
         """
+        Convert Gradio chatbot messages to OpenAI API format.
+        
+        Takes a Gradio chatbot conversation history and transforms it into
+        the format expected by OpenAI-compatible APIs, with optional image
+        processing and system prompt handling.
+        
+        Args:
+            system_prompt: System instructions for the model
+            support_system_role: Whether the API supports system role
+            history_len: Number of previous exchanges to include
+            user_message: Current user input text
+            image_path: Optional image for multimodal query
+            resize_size: Maximum dimension for image resizing
+            chatbot: Gradio chatbot history in standard format
+            convert_to_openai_format: Whether to convert image messages to OpenAI format
+            use_responses_api: Determines which API format to use
+            
+        Returns:
+            List of messages formatted for OpenAI API
         """
         messages = []
         if support_system_role and system_prompt:
@@ -277,18 +338,19 @@ class LLMFormatter:
             if convert_to_openai_format:
                 messages = cls._prepare_gradio_chatbot_image_messages_to_openai(
                     messages=messages,
+                    resize_size=resize_size,
                     use_responses_api=use_responses_api,
                 )
         text_message = cls._create_message_from_text(
             text=user_message,
             use_responses_api=use_responses_api,
         )
-        if not image_path_or_base64:
+        if not image_path:
             messages.append(text_message)
             return messages
         message = cls._create_message_from_image(
             text=user_message,
-            image_path_or_base64=image_path_or_base64,
+            image_path=image_path,
             resize_size=resize_size,
             use_responses_api=use_responses_api,
         )
@@ -302,41 +364,50 @@ class LLMFormatter:
     def _prepare_gradio_chatbot_image_messages_to_openai(
         cls,
         messages: GRADIO_CHAT_HISTORY,
+        resize_size: int,
         use_responses_api: bool,
     ) -> GRADIO_CHAT_HISTORY:
         """
-        https://www.gradio.app/guides/creating-a-chatbot-fast#multimodal-chat-interface
+        Convert image content in Gradio messages to OpenAI format.
+        
+        Processes Gradio's multimodal message format (with 'file' type) and
+        converts image content to base64 format expected by OpenAI APIs.
+        
+        Args:
+            messages: Gradio chatbot messages with potential image content
+            resize_size: Maximum dimension for image resizing
+            use_responses_api: Determines which API format to use
+            
+        Returns:
+            Converted messages with images in OpenAI-compatible format
+            
+        Reference:
+            https://www.gradio.app/guides/creating-a-chatbot-fast#multimodal-chat-interface
         """
         openai_messages = []
         messages
         for i in range(len(messages)):
             curr_message = messages[i]
             openai_message = dict(role=curr_message['role'], content=[])
+            debug_logger.debug(f"curr_message content: {curr_message['content']}")
+            if not isinstance(curr_message['content'], list):
+                continue
             for content in curr_message['content']:
                 if content.get('type') == 'text':
-                    text_content = cls.create_message_content_from_text(
+                    text_content = cls._create_message_content_from_text(
                         text=content['text'],
                         use_responses_api=use_responses_api,
                     )
                     openai_message['content'].append(text_content)
                 elif content.get('type') == 'file':
-                    if (
-                        Path(content.get('file', '')).suffix.lower() 
-                        in cls.image_extension
-                    ):
-                        image_content = cls.create_message_content_from_image(
-                            image_url=content['file']['url'],
+                    path = content.get('file', {}).get('path')
+                    if Path(path).suffix.lower() in cls.image_extension:
+                        image_content = cls._create_message_content_from_image(
+                            image_path=path,
+                            resize_size=resize_size,
                             use_responses_api=use_responses_api,
                         )
                         openai_message['content'].append(image_content)
-            openai_messages.append(openai_message)
+            if openai_message['content']:
+                openai_messages.append(openai_message)
         return openai_messages
-
-            # image_message = cls._create_message_from_image(
-            #     text=messages[i]['content'][-1].get('text'),
-            #     image_path_or_base64=curr_image_message['file']['path'],
-            #     resize_size=None,
-            #     use_responses_api=use_responses_api,
-            # )
-            # if image_message:
-            #     openai_message['content'].append(image_message['content'])
