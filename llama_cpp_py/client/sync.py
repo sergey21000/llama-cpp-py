@@ -36,16 +36,30 @@ class LlamaSyncClient(LlamaBaseClient):
     def check_health(self) -> dict[str, Any] | None:
         """Check llama.cpp server health status."""
         return self._get_request('/models')
-    
+
+    def get_props(self) -> dict[str, Any] | None:
+        """Retrieve server global properties from Llama.cpp server."""
+        return self._get_request('/props', v1=False)
+
     def get_models(self) -> dict[str, Any] | None:
         """Get list of available models."""
         return self._get_request('/models')
 
-    def get_props(self) -> dict[str, Any] | None:
-        """Retrieve server global properties from Llama.cpp server."""
-        return self._get_request('/props')
+    def check_multimodal_support(self, modality: str = 'vision') -> bool | None:
+        """Checking server multimodality support"""
+        props = self.get_props()
+        if props:
+            return props.get('modalities', {}).get(modality)
+
+    def check_support_system_role(self) -> bool | None:
+        """Checking server support system role"""
+        props = self.get_props()
+        if props:
+            return props.get('chat_template_caps', {}).get(
+                'supports_system_role'
+            )
     
-    def _get_request(self, path: str) -> dict[str, Any]:
+    def _get_request(self, path: str, v1: bool = True) -> dict[str, Any]:
         """
         Make a GET request to the specified API endpoint.
 
@@ -57,22 +71,19 @@ class LlamaSyncClient(LlamaBaseClient):
             On success: {'ok': True, 'data': response_json}
             On failure: {'ok': False, 'message': error_message}
         """
-        url = f'{self.openai_base_url}{path}'
+        if v1:
+            url = f'{self.openai_base_url}{path}'
+        else:
+            url = f'{self.base_url}{path}'
         try:
             response = requests.get(url)
+            debug_logger.debug(f'llama.cpp response from GET `{url}`: {response}')
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
             debug_logger.debug(f'Failed to fetch `{url}`: {e}')
         except json.JSONDecodeError as e:
             debug_logger.debug(f'Invalid JSON response from `{url}`: {e}')
-
-    def check_multimodal_support(self, modality: str = 'vision') -> bool:
-        """Checking server multimodality support"""
-        props = self.get_props()
-        if props:
-            return props.get('modalities', {}).get(modality, False)
-        return False
 
     def _stream_chat_completion_tokens(
         self,

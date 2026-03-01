@@ -112,15 +112,15 @@ class LlamaSyncServer(LlamaBaseServer):
         self.process.terminate()
         try:
             self.process.wait(timeout=self.timeout_to_stop_process)
-            debug_logger.info('llama.cpp server stopped correctly')
+            debug_logger.info('llama.cpp server stopped')
         except subprocess.TimeoutExpired:
             debug_logger.info('The server did not respond to terminate(), killing it ...')
             self.process.kill()
             self.process.wait()
+            debug_logger.info('llama.cpp server stopped')
         except ProcessLookupError:
             debug_logger.info('Process already terminated, nothing to stop')
         self.process = None
-        server_logger.info('llama.cpp server stopped')
 
     def wait_for_server_ready(self, url: str, timeout: int | float) -> bool:
         """Wait synchronously for server to become ready and respond to health checks."""

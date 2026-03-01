@@ -38,15 +38,31 @@ class LlamaAsyncClient(LlamaBaseClient):
         """Check llama.cpp server health status asynchronously."""
         return await self._get_request('/health')
 
+    async def get_props(self) -> dict[str, Any] | None:
+        """Retrieve server global properties from Llama.cpp server asynchronously."""
+        return await self._get_request('/props', v1=False)
+    
     async def get_models(self) -> dict[str, Any] | None:
         """Get list of available models asynchronously."""
         return await self._get_request('/models')
 
-    async def get_props(self) -> dict[str, Any] | None:
-        """Retrieve server global properties from Llama.cpp server asynchronously."""
-        return await self._get_request('/props')
+    async def check_multimodal_support(self, modality: str = 'vision') -> bool:
+        """Checking server multimodality support"""
+        props = await self.get_props()
+        if props:
+            return props.get('modalities', {}).get(modality, False)
+        return False
 
-    async def _get_request(self, path: str) -> dict[str, Any] | None:
+    async def check_support_system_role(self) -> bool:
+        """Checking server support system role"""
+        props = await self.get_props()
+        if props:
+            return props.get('chat_template_caps', {}).get(
+                'supports_system_role', False
+            )
+        return False
+
+    async def _get_request(self, path: str, v1: bool = True) -> dict[str, Any] | None:
         """
         Make an asynchronous GET request to the specified API endpoint.
 
@@ -61,7 +77,10 @@ class LlamaAsyncClient(LlamaBaseClient):
             Uses a new aiohttp session for each request. If you make many requests,
             consider sharing a session for better performance.
         """
-        url = f'{self.openai_base_url}{path}'
+        if v1:
+            url = f'{self.openai_base_url}{path}'
+        else:
+            url = f'{self.base_url}{path}'
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:
@@ -73,13 +92,6 @@ class LlamaAsyncClient(LlamaBaseClient):
             debug_logger.debug(f'Invalid JSON response from `{url}`: {e}')
         except asyncio.TimeoutError as e:
             debug_logger.debug(f'Request timeout for `{url}`: {e}')
-
-    async def check_multimodal_support(self, modality: str = 'vision') -> bool:
-        """Checking server multimodality support"""
-        props = await self.get_props()
-        if props:
-            return props.get('modalities', {}).get(modality, False)
-        return False
 
     async def _astream_chat_completion_tokens(
         self,
