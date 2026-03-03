@@ -23,7 +23,8 @@ class LlamaBaseServer:
         wait_for_ready: bool = True,
         **subprocess_kwargs,
     ):
-        """Initialize the base llama.cpp server instance.
+        """
+        Initialize the base llama.cpp server instance.
 
         Args:
             llama_dir: Directory containing llama-server executable. If not provided,
@@ -96,7 +97,8 @@ class LlamaBaseServer:
         )
 
     def log_output_pty(self) -> None:
-        """Read and forward llama.cpp server output from a pseudo-terminal (PTY).
+        """
+        Read and forward llama.cpp server output from a pseudo-terminal (PTY).
 
         Used in Jupyter/Colab environments to preserve TTY semantics required for
         dynamic progress bar rendering, which is disabled when stdout is a PIPE.
@@ -117,7 +119,8 @@ class LlamaBaseServer:
 
     @staticmethod
     def process_log_output_chunk(chunk: bytes, state: dict, log_prefix: str) -> None:
-        """Process a single byte chunk from server output stream.
+        """
+        Process a single byte chunk from server output stream.
 
         Handles carriage returns for dynamic progress updates and newlines for regular output.
         Updates the parsing state dictionary in-place.
