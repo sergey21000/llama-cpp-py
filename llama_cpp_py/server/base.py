@@ -70,7 +70,7 @@ class LlamaBaseServer:
         self.health_url = f'{server_url}/health'
         self.openai_base_url = f'{server_url}/v1'
         self.timeout_wait_for_server_ready = int(
-            os.getenv('LLAMACPP_SERVER_TIMEOUT_WAIT') or 300
+            os.getenv('LLAMACPP_SERVER_TIMEOUT_WAIT', 300)
         )
         self.timeout_to_stop_process = 3
         llama_dir = llama_dir or os.getenv('LLAMACPP_DIR')
