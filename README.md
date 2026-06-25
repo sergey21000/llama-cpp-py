@@ -178,13 +178,6 @@ async with LlamaAsyncServer() as server:
 
 Environment variables for llama-cpp-py
 
-> [!NOTE]
-> Function arguments override environment variables. For example:
-> ```python
-> server = LlamaSyncServer(llama_dir='/path/bin')
-> ```
-> will take precedence over the `LLAMACPP_DIR` variable
-
 ```env
 # Server startup wait timeout in seconds.
 # Increase if model loading takes a long time.
@@ -213,6 +206,13 @@ LLAMACPP_LOG_LEVEL=DEBUG
 # or set global loguru level
 LOGURU_LEVEL=WARNING
 ```
+
+> [!NOTE]
+> Function arguments override environment variables. For example:
+> ```python
+> server = LlamaSyncServer(llama_dir='/path/bin')
+> ```
+> will take precedence over the `LLAMACPP_DIR` variable
 
 
 ## Troubleshooting
