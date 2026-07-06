@@ -32,13 +32,14 @@ def test_sync_completion(llama_sync_server):
         base_url=f'{llama_sync_server.server_url}/v1',
         api_key='sk-no-key-required',
     )
+    # test no thinking
     chat_completions_kwargs = dict(
-        temperature=0.8,
+        temperature=0.2,
         top_p=0.9,
         max_tokens=5,
         extra_body=dict(
             top_k=40,
-            repeat_penalty=1,
+            repeat_penalty=1.2,
             reasoning_format='none',
             chat_template_kwargs=dict(
                 enable_thinking=False,
@@ -61,8 +62,10 @@ def test_sync_completion(llama_sync_server):
     assert len(response_text.split()) > 1
     # '<think>\n\n</think>\n\n'
     assert '<think>' not in response_text[19:]
-
+    
+    # test thinking
     chat_completions_kwargs['extra_body']['chat_template_kwargs']['enable_thinking'] = True
+    chat_completions_kwargs['max_tokens'] = 1000
     stream_response = client.chat.completions.create(
         model='local',
         messages=[{'role':'user', 'content': 'Привет, как дела?'}],
@@ -76,5 +79,5 @@ def test_sync_completion(llama_sync_server):
     
     print(f'{Fore.YELLOW}{Style.BRIGHT}response_text:{Style.RESET_ALL}\n{response_text}')
     assert len(response_text.split()) > 1
-    # '<think>\n\nModel responce ...</think>\n\n'
+    # '<think>\n\nModel response ...</think>\n\n'
     assert '</think>' in response_text[19:]
