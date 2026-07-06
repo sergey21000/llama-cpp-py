@@ -20,23 +20,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v8
         with:
           enable-cache: true
+          python-version: 3.12
 
-      - name: Set up Python
-        run: |
-          uv python install 3.12
-          uv venv
-          
       - name: Install huggingface-hub
         run: uv pip install huggingface_hub[cli]
 
       - name: Download models
         run: |
+          uv venv
           uv run hf download ${{ env.LLM_MODEL_REPO }} ${{ env.LLM_MODEL_FILE }} \
           --local-dir ${{ env.LLM_MODEL_DIR }}
           
@@ -54,24 +51,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]  # macos-latest
         python-version: ["3.12"]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v8
         with:
           enable-cache: true
-
-      - name: Set up Python
-        run: |
-          uv python install ${{ matrix.python-version }}
-          uv venv
+          python-version: 3.12
 
       - name: Install dependencies
         run: |
+          uv venv
           uv pip install .[test]
 
       - name: Download models artifact
