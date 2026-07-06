@@ -1,3 +1,10 @@
+"""
+Integration tests for llama-cpp-py package.
+
+Tests cover:
+- Server startup/shutdown (sync and async)
+"""
+
 from llama_cpp_py import LlamaSyncClient
 
 def test_server_startup(llama_sync_server):
