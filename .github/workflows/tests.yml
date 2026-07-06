@@ -29,11 +29,12 @@ jobs:
           python-version: 3.12
 
       - name: Install huggingface-hub
-        run: uv pip install huggingface_hub[cli]
+        run: |
+          uv venv
+          uv pip install huggingface_hub[cli]
 
       - name: Download models
         run: |
-          uv venv
           uv run hf download ${{ env.LLM_MODEL_REPO }} ${{ env.LLM_MODEL_FILE }} \
           --local-dir ${{ env.LLM_MODEL_DIR }}
           
