@@ -59,9 +59,10 @@ async def test_async_completion(llama_async_server):
     assert '<think>' not in response_text[19:]
 
     chat_completions_kwargs['extra_body']['chat_template_kwargs']['enable_thinking'] = True
+    chat_completions_kwargs['max_tokens'] = 1000
     stream_response = await client.chat.completions.create(
         model='local',
-        messages=[{'role':'user', 'content': 'Привет, как дела?'}],
+        messages=[{'role':'user', 'content': 'Привет, как дела? Отвечай максимально кратко, не думай'}],
         stream=True,
         **chat_completions_kwargs,
     )

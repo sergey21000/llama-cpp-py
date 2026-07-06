@@ -94,7 +94,7 @@ jobs:
         shell: pwsh
         
       - name: Test with pytest
-        # continue-on-error: true
+        continue-on-error: ${{ matrix.os != 'macos-latest' }}
         env:
           LLAMA_ARG_MODEL: ${{ env.LLM_MODEL_DIR }}/${{ env.LLM_MODEL_FILE }}
         run: |

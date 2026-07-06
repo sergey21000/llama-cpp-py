@@ -68,7 +68,7 @@ def test_sync_completion(llama_sync_server):
     chat_completions_kwargs['max_tokens'] = 1000
     stream_response = client.chat.completions.create(
         model='local',
-        messages=[{'role':'user', 'content': 'Привет, как дела?'}],
+        messages=[{'role':'user', 'content': 'Привет, как дела? Отвечай максимально кратко, не думай'}],
         stream=True,
         **chat_completions_kwargs,
     )
