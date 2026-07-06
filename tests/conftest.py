@@ -15,7 +15,7 @@ from llama_cpp_py import (
 @pytest.fixture(scope='session')
 def llama_env():
     """Load environment variables for llama.cpp server from env.llama file."""
-    load_dotenv('env.llama')
+    load_dotenv('tests/.llama.test.env')
 
 
 @pytest.fixture(scope='session')
