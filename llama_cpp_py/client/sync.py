@@ -67,22 +67,34 @@ class LlamaSyncClient(LlamaBaseClient):
 
         Returns:
             Dictionary with response data including 'ok' flag.
-            On success: {'ok': True, 'data': response_json}
-            On failure: {'ok': False, 'message': error_message}
+            On success: {'ok': True, 'code': 200, ...response fields}
+            On failure: {'ok': False, 'code': <status>, 'message': <error>, 'type': <error_type>}
         """
-        if v1:
-            url = f'{self.openai_base_url}{path}'
-        else:
-            url = f'{self.base_url}{path}'
+        url = f'{self.openai_base_url}{path}' if v1 else f'{self.base_url}{path}'
         try:
             response = requests.get(url)
             debug_logger.debug(f'llama.cpp response from GET `{url}`: {response}')
             response.raise_for_status()
-            return response.json()
+            return {'ok': True, 'code': response.status_code, **response.json()}
+        except requests.exceptions.HTTPError as e:
+            debug_logger.debug(f'HTTP error from `{url}`: {e}')
+            status_code = e.response.status_code if e.response is not None else None
+            try:
+                error_body = e.response.json().get('error', {})
+            except (ValueError, AttributeError):
+                error_body = {}
+            return {
+                'ok': False,
+                'code': error_body.get('code', status_code),
+                'message': error_body.get('message', str(e)),
+                'type': error_body.get('type', 'http_error'),
+            }
         except requests.exceptions.RequestException as e:
             debug_logger.debug(f'Failed to fetch `{url}`: {e}')
+            return {'ok': False, 'code': None, 'message': str(e), 'type': 'connection_error'}
         except json.JSONDecodeError as e:
             debug_logger.debug(f'Invalid JSON response from `{url}`: {e}')
+            return {'ok': False, 'code': None, 'message': f'Invalid JSON response: {e}', 'type': 'invalid_json'}
 
     def _stream_chat_completion_tokens(
         self,

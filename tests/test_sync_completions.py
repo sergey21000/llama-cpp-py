@@ -12,10 +12,12 @@ Tests cover:
 import os
 from openai import OpenAI
 from colorama import Fore, Style
+from llama_cpp_py import LlamaSyncClient
 
 
 def test_server_start(llama_sync_server):
-    assert LlamaSyncClient(openai_base_url=llama_server.server_url).check_health()
+    health = LlamaSyncClient(openai_base_url=llama_sync_server.openai_base_url).check_health()
+    assert health.get('ok', False)
 
 
 def test_sync_completion(llama_sync_server):

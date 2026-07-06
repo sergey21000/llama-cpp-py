@@ -61,7 +61,7 @@ class LlamaAsyncClient(LlamaBaseClient):
             )
         return False
 
-    async def _get_request(self, path: str, v1: bool = True) -> dict[str, Any] | None:
+    async def _get_request(self, path: str, v1: bool = True) -> dict[str, Any]:
         """
         Make an asynchronous GET request to the specified API endpoint.
 
@@ -69,28 +69,44 @@ class LlamaAsyncClient(LlamaBaseClient):
             path: API endpoint path (e.g., '/health', '/models')
 
         Returns:
-            Response JSON as dict on success, None on failure.
-            Failures are logged via debug_logger.
+            Dictionary with response data including 'ok' flag.
+            On success: {'ok': True, 'code': 200, ...response fields}
+            On failure: {'ok': False, 'code': <status>, 'message': <error>, 'type': <error_type>}
 
         Note:
             Uses a new aiohttp session for each request. If you make many requests,
             consider sharing a session for better performance.
         """
-        if v1:
-            url = f'{self.openai_base_url}{path}'
-        else:
-            url = f'{self.base_url}{path}'
+        url = f'{self.openai_base_url}{path}' if v1 else f'{self.base_url}{path}'
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:
-                    response.raise_for_status()
-                    return await response.json()
-        except aiohttp.ClientError as e:
-            debug_logger.debug(f'Failed to fetch `{url}`: {e}')
-        except json.JSONDecodeError as e:
-            debug_logger.debug(f'Invalid JSON response from `{url}`: {e}')
+                    debug_logger.debug(f'llama.cpp response from GET `{url}`: {response}')
+                    try:
+                        body = await response.json()
+                    except (aiohttp.ContentTypeError, json.JSONDecodeError) as e:
+                        debug_logger.debug(f'Invalid JSON response from `{url}`: {e}')
+                        return {
+                            'ok': False,
+                            'code': response.status,
+                            'message': f'Invalid JSON response: {e}',
+                            'type': 'invalid_json',
+                        }
+                    if response.status >= 400:
+                        error_body = body.get('error', {}) if isinstance(body, dict) else {}
+                        return {
+                            'ok': False,
+                            'code': error_body.get('code', response.status),
+                            'message': error_body.get('message', f'HTTP {response.status}'),
+                            'type': error_body.get('type', 'http_error'),
+                        }
+                    return {'ok': True, 'code': response.status, **body} if isinstance(body, dict) else {'ok': True, 'code': response.status, 'data': body}
         except asyncio.TimeoutError as e:
             debug_logger.debug(f'Request timeout for `{url}`: {e}')
+            return {'ok': False, 'code': None, 'message': str(e), 'type': 'timeout'}
+        except aiohttp.ClientError as e:
+            debug_logger.debug(f'Failed to fetch `{url}`: {e}')
+            return {'ok': False, 'code': None, 'message': str(e), 'type': 'connection_error'}
 
     async def _astream_chat_completion_tokens(
         self,
