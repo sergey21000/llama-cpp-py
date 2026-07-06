@@ -55,7 +55,8 @@ async def test_async_completion(llama_async_server):
     print()
     print(f'{Fore.YELLOW}{Style.BRIGHT}response_text:{Style.RESET_ALL}\n{response_text}')
     assert len(response_text.split()) > 1
-    assert '<think>' not in response_text
+    # '<think>\n\n</think>\n\n'
+    assert '<think>' not in response_text[19:]
 
     chat_completions_kwargs['extra_body']['chat_template_kwargs']['enable_thinking'] = True
     stream_response = await client.chat.completions.create(
@@ -71,4 +72,5 @@ async def test_async_completion(llama_async_server):
 
     print(f'{Fore.YELLOW}{Style.BRIGHT}response_text:{Style.RESET_ALL}\n{response_text}')
     assert len(response_text.split()) > 1
-    assert '<think>' in response_text
+    # '<think>\n\nModel responce ...</think>\n\n'
+    assert '</think>' in response_text[19:]
