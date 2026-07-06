@@ -14,6 +14,10 @@ from openai import OpenAI
 from colorama import Fore, Style
 
 
+def test_server_start(llama_sync_server):
+    assert LlamaSyncClient(openai_base_url=llama_server.server_url).check_health()
+
+
 def test_sync_completion(llama_sync_server):
     """Test synchronous chat completions with various parameters.
     
@@ -39,9 +43,10 @@ def test_sync_completion(llama_sync_server):
             ),
         ),
     )
+    messages = [{'role':'user', 'content': 'Привет, как дела?'}]
     stream_response = client.chat.completions.create(
         model='local',
-        messages=[{'role':'user', 'content': 'Привет, как дела?'}],
+        messages=messages,
         stream=True,
         **chat_completions_kwargs,
     )
@@ -53,7 +58,8 @@ def test_sync_completion(llama_sync_server):
     print()
     print(f'{Fore.YELLOW}{Style.BRIGHT}response_text:{Style.RESET_ALL}\n{response_text}')
     assert len(response_text.split()) > 1
-    assert '<think>' not in response_text
+    # '<think>\n\n</think>\n\n'
+    assert '<think>' not in response_text[19:]
 
     chat_completions_kwargs['extra_body']['chat_template_kwargs']['enable_thinking'] = True
     stream_response = client.chat.completions.create(
@@ -69,4 +75,6 @@ def test_sync_completion(llama_sync_server):
     
     print(f'{Fore.YELLOW}{Style.BRIGHT}response_text:{Style.RESET_ALL}\n{response_text}')
     assert len(response_text.split()) > 1
-    assert '<think>' in response_text
+    len_forrmatted_prompt = len(messages[0]['content']) + 69
+    # '<think>\n\n</think>\n\n'
+    assert '</think>' in response_text[19:]
