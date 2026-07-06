@@ -29,7 +29,7 @@ def test_sync_completion(llama_sync_server):
     - Response formatting is correct
     """
     client = OpenAI(
-        base_url=f'{llama_sync_server.server_url}/v1',
+        base_url=llama_sync_server.openai_base_url,
         api_key='sk-no-key-required',
     )
     # test no thinking

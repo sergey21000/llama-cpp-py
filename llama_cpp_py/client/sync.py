@@ -18,7 +18,7 @@ class LlamaSyncClient(LlamaBaseClient):
     def __init__(
         self,
         openai_base_url: str = '',
-        api_key: str = '',
+        api_key: str = '-',
         model: str = '',
     ):
         """

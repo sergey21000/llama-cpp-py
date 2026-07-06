@@ -25,7 +25,7 @@ async def test_async_completion(llama_async_server):
     - Thinking tags are properly controlled via enable_thinking flag
     """
     client = AsyncOpenAI(
-        base_url=f'{llama_async_server.server_url}/v1',
+        base_url=llama_async_server.openai_base_url,
         api_key='sk-no-key-required',
     )
     chat_completions_kwargs = dict(
