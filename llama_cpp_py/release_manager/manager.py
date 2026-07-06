@@ -21,8 +21,8 @@ class LlamaReleaseManager(GithubReleaseManager):
         tag: str = 'latest',
         release_zip_url: str = '',
         releases_dir: str | Path = '',
-        exclude_patterns: list[str] | None = ['vulkan', 'cudart', 'rocm', 'openvino'],
-        priority_patterns: list[str] | None = ['cpu', 'cuda'],
+        exclude_patterns: list[str] | None = ['vulkan', 'cudart', 'rocm', 'openvino', 'sycl'],
+        priority_patterns: list[str] | None = ['ubuntu-x64', 'win-cpu-x64', 'win-cuda'],
     ):
         """Initialize llama.cpp release manager.
 
