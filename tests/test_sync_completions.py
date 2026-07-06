@@ -76,6 +76,5 @@ def test_sync_completion(llama_sync_server):
     
     print(f'{Fore.YELLOW}{Style.BRIGHT}response_text:{Style.RESET_ALL}\n{response_text}')
     assert len(response_text.split()) > 1
-    len_forrmatted_prompt = len(messages[0]['content']) + 69
     # '<think>\n\nModel responce ...</think>\n\n'
     assert '</think>' in response_text[19:]
