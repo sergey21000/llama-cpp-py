@@ -60,8 +60,6 @@ class GithubReleaseManager:
             zip_url=release_zip_url,
             extract_dir=self.release_dir,
         )
-        else:
-            debug_logger.info(f'Using cached llama.cpp release: {self.release_dir}')
 
     @staticmethod
     def validate_releases_api_url(releases_api_url):
