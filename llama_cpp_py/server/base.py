@@ -85,15 +85,15 @@ class LlamaBaseServer:
         self.verbose = verbose
         self.wait_for_ready = wait_for_ready
         self.subprocess_kwargs = subprocess_kwargs
-        if platform.system() != 'Windows':
-            os.environ['LD_LIBRARY_PATH'] = f"{self.llama_dir.absolute()}:" + ':'.join(
-                p for p in os.getenv('LD_LIBRARY_PATH', '').split(':') 
-                if 'llama-cpp-py/releases' not in p
-                or 'llama.cpp/build/bin' not in p
-            )
+        os.environ['LD_LIBRARY_PATH'] = f"{self.llama_dir.absolute()}:" + ':'.join(
+            p for p in os.getenv('LD_LIBRARY_PATH', '').split(':') 
+            if p
+            and 'llama-cpp-py/releases' not in p
+            and 'llama.cpp/build/bin' not in p
+        )
         debug_logger.debug(
-            f'LlamaBaseServer init, server_url: {self.server_url}, '
-            f'start_server_cmd: {self.start_server_cmd}'
+            f'LlamaBaseServer has been initialized\nserver_url: {self.server_url}\n'
+            f'start_server_cmd: {self.start_server_cmd}\nllama_dir: {self.llama_dir}'
         )
 
     @staticmethod
