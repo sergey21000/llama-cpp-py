@@ -85,7 +85,7 @@ class LlamaBaseServer:
         self.verbose = verbose
         self.wait_for_ready = wait_for_ready
         self.subprocess_kwargs = subprocess_kwargs
-        if self.llama_dir.absolute() not in os.getenv('LD_LIBRARY_PATH', ''):
+        if str(self.llama_dir.absolute()) not in os.getenv('LD_LIBRARY_PATH', ''):
             os.environ['LD_LIBRARY_PATH'] = f"{self.llama_dir.absolute()}:" + ':'.join(
                 p for p in os.getenv('LD_LIBRARY_PATH', '').split(':') 
                 if p
